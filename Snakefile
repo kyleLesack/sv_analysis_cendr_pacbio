@@ -63,10 +63,11 @@ rule picard_sort:
 	        bamindex="1_alignments/minimap2/{strain}/{strain}_sorted.bam.bai"
 	params:
 	        picard_cmd=r"""java "-Xmx70g" -jar /home/kyle.lesack1/miniconda3/envs/picardtools/share/picard-2.27.5-0/picard.jar SortSam """,
+			max_records="100000"
 	conda:  "yaml/picardtools.v2.27.5.yaml"
 	threads: 8
 	resources:
 	        mem_mb=lambda _, attempt: 40000 + ((attempt - 1) * 10000),
 	        time_hms="04:00:00"
 	shell:
-	        "{params.picard_cmd} -I {input} -O {output.bamfile} -SORT_ORDER coordinate -VALIDATION_STRINGENCY LENIENT --CREATE_INDEX --MAX_RECORDS_IN_RAM 250000"
+	        "{params.picard_cmd} -I {input} -O {output.bamfile} -SORT_ORDER coordinate -VALIDATION_STRINGENCY LENIENT --CREATE_INDEX --MAX_RECORDS_IN_RAM {params.max_records}"
