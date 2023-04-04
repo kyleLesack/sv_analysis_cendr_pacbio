@@ -4,7 +4,7 @@ REFERENCE = "0_input/reference/c_elegans.PRJNA13758.WS263.genomic.fa" # C. elega
 
 rule all:
 	input:
-		expand("1_alignments/minimap2/{strain}/{strain}_sorted.{extension}", strain=ALL_STRAINS, extension=["bam","bam.bai"]),
+		expand("1_alignments/minimap2/{strain}/{strain}_sorted.{extension}", strain=ALL_STRAINS, extension=["bam","bai"]),
 
 # Align FASTQ files using Minimap2
 rule minimap2_old:
