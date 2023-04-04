@@ -60,7 +60,7 @@ rule picard_sort:
 	        "1_alignments/minimap2/{strain}/{strain}_aln.sam"
 	output:
 	        bamfile="1_alignments/minimap2/{strain}/{strain}_sorted.bam",
-	        bamindex="1_alignments/minimap2/{strain}/{strain}_sorted.bam.bai"
+	        bamindex="1_alignments/minimap2/{strain}/{strain}_sorted.bai"
 	params:
 	        picard_cmd=r"""java "-Xmx70g" -jar /home/kyle.lesack1/miniconda3/envs/picardtools/share/picard-2.27.5-0/picard.jar SortSam """,
 			max_records="100000"
