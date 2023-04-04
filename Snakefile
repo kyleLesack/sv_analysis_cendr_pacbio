@@ -22,9 +22,9 @@ rule minimap2_old:
 
 rule minimap2_index:
 	input:
-	    target="0_data/reference/c_elegans.PRJNA13758.WS263.genomic.fa"
+	    target="0_input/reference/c_elegans.PRJNA13758.WS263.genomic.fa"
 	output:
-	    "0_data/reference/c_elegans.PRJNA13758.WS263.genomic.fa.mmi"
+	    "0_input/reference/c_elegans.PRJNA13758.WS263.genomic.fa.mmi"
 #	log:
 #	    "logs/minimap2_index/{strain}.log"
 	params:
@@ -38,7 +38,7 @@ rule minimap2_index:
 
 rule minimap2_sam:
 	input:
-	    target="0_data/reference/c_elegans.PRJNA13758.WS263.genomic.fa.mmi",  # can be either genome index or genome fasta
+	    target="0_input/reference/c_elegans.PRJNA13758.WS263.genomic.fa.mmi",  # can be either genome index or genome fasta
 	    query="0_input/fastq/{strain}_all_reads.fastq"
 	output:
 	    temp("1_alignments/minimap2/{strain}/{strain}_aln.sam")
