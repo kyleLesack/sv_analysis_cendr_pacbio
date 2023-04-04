@@ -25,8 +25,8 @@ rule minimap2_index:
 	    target="0_data/reference/c_elegans.PRJNA13758.WS263.genomic.fa"
 	output:
 	    "0_data/reference/c_elegans.PRJNA13758.WS263.genomic.fa.mmi"
-	log:
-	    "logs/minimap2_index/{strain}.log"
+#	log:
+#	    "logs/minimap2_index/{strain}.log"
 	params:
 	    extra=""  # optional additional args
 	threads: 4
