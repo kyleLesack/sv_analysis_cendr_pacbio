@@ -4,7 +4,7 @@ NGMLRDICT40X = {"DL238": "0.24", "DRR142768": "0.52", "ECA36": "0.19", "ECA396":
 
 rule all:
 	input:
-		expand("1_alignments/ngmlr/{strain}/{strain}_picard_sorted.{extension}", strain=ALL_STRAINS, extension=["bam","bai"]),
+		expand("1_alignments/ngmlr/{strain}/{strain}_picard_sorted.{extension}", strain=ALL_STRAINS, extension=["bam","bam.bai"]),
 
 # Align FASTQ files using NGMLR
 #rule ngmlr:
