@@ -47,7 +47,7 @@ rule rename_bam_index:
 	conda:  "yaml/rename.yaml"
 	threads: 1
 	resources:
-		mem_mb=100,
+		mem_mb=2000,
 		time_hms="00:05:00"
 	shell:
 		"rename 's/\.bai/.bam.bai/' {input}"
