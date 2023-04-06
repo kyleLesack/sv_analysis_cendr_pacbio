@@ -63,7 +63,7 @@ rule svim:
 	output:
 		"2_variant_calls/ngmlr/svim/{strain}/variants.vcf"
 	params:
-		outdir="2_variant_calls/ngmlr/svim/{strain}/variants.vcf",
+		outdir="2_variant_calls/ngmlr/svim/{strain}/",
 		MIN_SV_SIZE="100",
 		MINIMUM_SCORE="15"
 	conda:  "yaml/svim2.yaml"
@@ -82,7 +82,7 @@ rule svim_subsampled:
 	output:
 		"2_variant_calls/ngmlr.subsampled_40X/svim/{strain}/variants.vcf"
 	params:
-		outdir="2_variant_calls/ngmlr.subsampled_40X/svim/{strain}/variants.vcf",
+		outdir="2_variant_calls/ngmlr.subsampled_40X/svim/{strain}/",
 		MIN_SV_SIZE="100",
 		MINIMUM_SCORE="15"
 	conda:  "yaml/svim2.yaml"
