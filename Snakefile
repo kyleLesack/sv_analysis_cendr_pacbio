@@ -5,6 +5,7 @@ NGMLRDICT40X = {"DL238": "0.24", "DRR142768": "0.52", "ECA36": "0.19", "ECA396":
 rule all:
 	input:
 		expand("1_alignments/ngmlr/{strain}/{strain}_picard_sorted.{extension}", strain=ALL_STRAINS, extension=["bam","bam.bai"]),
+		expand("1_alignments/ngmlr.subsampled_40X/{strain}/{strain}_picard_sorted.bam", strain=ALL_STRAINS),
 
 # Align FASTQ files using NGMLR
 #rule ngmlr:
@@ -68,3 +69,18 @@ rule svim:
 		time_hms="02:00:00"
 	shell:
 		"svim alignment {params.outdir} {input.bamfile} {REFERENCE}"
+
+rule subsample_ngmlr_40x:
+	input:
+		"1_alignments/ngmlr/{strain}/{strain}_picard_sorted.bam"
+	output:
+		"1_alignments/ngmlr.subsampled_40X/{strain}/{strain}_picard_sorted.bam"
+	params:
+		value=lambda wcs: NGMLRDICT40X[wcs.strain]
+	conda:  "yaml/samtools_1.9.yaml"
+	threads: 4
+	resources:
+		mem_mb=lambda _, attempt: 10000 + ((attempt - 1) * 10000),
+		time_hms="08:00:00"
+	shell:
+		"""samtools view -@ {threads} -b -s {params.value} {input} > {output}"""
