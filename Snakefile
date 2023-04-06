@@ -6,7 +6,9 @@ rule all:
 	input:
 		expand("1_alignments/ngmlr/{strain}/{strain}_picard_sorted.{extension}", strain=ALL_STRAINS, extension=["bam","bam.bai"]),
 		expand("1_alignments/ngmlr.subsampled_40X/{strain}/{strain}_picard_sorted.bam", strain=ALL_STRAINS),
-
+		expand("1_alignments/ngmlr.subsampled.picard_sorted/{strain}/{strain}_picard_sorted.bam", strain=ALL_STRAINS), # use diff on these and subsampled. Remove this if same.
+		expand("2_variant_calls/ngmlr/svim/{strain}/variants.vcf", strain=ALL_STRAINS),
+		expand("2_variant_calls/ngmlr.subsampled_40X/svim/{strain}/variants.vcf", strain=ALL_STRAINS),
 # Align FASTQ files using NGMLR
 #rule ngmlr:
 #	input:
@@ -61,14 +63,35 @@ rule svim:
 	output:
 		"2_variant_calls/ngmlr/svim/{strain}/variants.vcf"
 	params:
-		outdir="2_variant_calls/ngmlr/svim/{strain}/variants.vcf"
+		outdir="2_variant_calls/ngmlr/svim/{strain}/variants.vcf",
+		MIN_SV_SIZE="100",
+		MINIMUM_SCORE="15"
 	conda:  "yaml/svim2.yaml"
 	threads: 8
 	resources:
 		mem_mb=lambda _, attempt: 20000 + ((attempt - 1) * 10000),
 		time_hms="02:00:00"
 	shell:
-		"svim alignment {params.outdir} {input.bamfile} {REFERENCE}"
+		"svim alignment --min_sv_size {params.MIN_SV_SIZE} --minimum_score {params.MINIMUM_SCORE} {params.outdir} {input.bamfile} {REFERENCE}"
+
+# Call SVs with SVIM
+rule svim_subsampled:
+	input:
+	        bamfile="1_alignments/ngmlr/{strain}/{strain}_picard_sorted.bam",
+	        bamindex="1_alignments/ngmlr.subsampled_40X/{strain}/{strain}_picard_sorted.bam"
+	output:
+		"2_variant_calls/ngmlr.subsampled_40X/svim/{strain}/variants.vcf"
+	params:
+		outdir="2_variant_calls/ngmlr.subsampled_40X/svim/{strain}/variants.vcf"
+		MIN_SV_SIZE="100",
+		MINIMUM_SCORE="15"
+	conda:  "yaml/svim2.yaml"
+	threads: 8
+	resources:
+		mem_mb=lambda _, attempt: 20000 + ((attempt - 1) * 10000),
+		time_hms="02:00:00"
+	shell:
+		"svim alignment --min_sv_size {params.MIN_SV_SIZE} --minimum_score {params.MINIMUM_SCORE} {params.outdir} {input.bamfile} {REFERENCE}"
 
 rule subsample_ngmlr_40x:
 	input:
@@ -84,3 +107,21 @@ rule subsample_ngmlr_40x:
 		time_hms="08:00:00"
 	shell:
 		"""samtools view -@ {threads} -b -s {params.value} {input} > {output}"""
+
+# Check if the subsample_ngmlr_40x BAM files remain sorted
+rule picard_sort_subsampled:
+	input:
+			"1_alignments/ngmlr.subsampled_40X/{strain}/{strain}_picard_sorted.bam"
+	output:
+	        bamfile="1_alignments/ngmlr.subsampled.picard_sorted/{strain}/{strain}_picard_sorted.bam",
+	        bamindex="1_alignments/ngmlr.subsampled.picard_sorted/{strain}/{strain}_picard_sorted.bai"
+	params:
+	        picard_cmd=r"""java "-Xmx60g" -jar /home/kyle.lesack1/miniconda3/envs/picardtools/share/picard-2.27.5-0/picard.jar SortSam """,
+			max_records="25000"
+	conda:  "yaml/picardtools.v2.27.5.yaml"
+	threads: 8
+	resources:
+	        mem_mb=lambda _, attempt: 60000 + ((attempt - 1) * 10000),
+	        time_hms="02:00:00"
+	shell:
+	        "{params.picard_cmd} -I {input} -O {output.bamfile} -SORT_ORDER coordinate -VALIDATION_STRINGENCY LENIENT --CREATE_INDEX --MAX_RECORDS_IN_RAM {params.max_records}"
