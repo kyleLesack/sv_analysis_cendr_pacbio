@@ -7,18 +7,18 @@ rule all:
 		expand("1_alignments/ngmlr/{strain}/{strain}_sorted.{extension}", strain=ALL_STRAINS, extension=["bam","bai"]),
 
 # Align FASTQ files using NGMLR
-rule ngmlr:
-	input:
-		ancient("0_input/fastq/{strain}_all_reads.fastq")
-	output:
-		temp("1_alignments/ngmlr/{strain}/{strain}_aln.sam")
-	conda:  "yaml/ngmlr.yaml"
-	threads: 8
-	resources:
-		mem_mb=lambda _, attempt: 10000 + ((attempt - 1) * 10000),
-		time="60:00:00"
-	shell:
-		"ngmlr -t {threads} -r {REFERENCE} -q {input} -o {output}"
+#rule ngmlr:
+#	input:
+#		ancient("0_input/fastq/{strain}_all_reads.fastq")
+#	output:
+#		temp("1_alignments/ngmlr/{strain}/{strain}_aln.sam")
+#	conda:  "yaml/ngmlr.yaml"
+#	threads: 8
+#	resources:
+#		mem_mb=lambda _, attempt: 10000 + ((attempt - 1) * 10000),
+#		time="60:00:00"
+#	shell:
+#		"ngmlr -t {threads} -r {REFERENCE} -q {input} -o {output}"
 
 rule picard_sort:
 	input:
