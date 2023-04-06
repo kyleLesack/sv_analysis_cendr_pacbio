@@ -1,0 +1,11 @@
+# CeNDR Descriptions
+
+The divergent set includes 12 genotypically different strains and can be used to determine broad-sense heritability after repeated independent measures of your favorite phenotype. We recommend starting with the divergent set.
+
+# How I calculated set intersections
+
+Copy set strains from: 
+https://www.elegansvariation.org/strains/catalog
+sort with sort_sets.sh
+find . -maxdepth 1 -name "*set*.txt" -exec comm -12 pacbio.txt {} \; | sort -u > intersection/all_sets_with_pacbio_strains.txt
+find . -maxdepth 1 -name "*.txt" -exec grep -H -wFf intersection/all_sets_with_pacbio_strains.txt {} \;
