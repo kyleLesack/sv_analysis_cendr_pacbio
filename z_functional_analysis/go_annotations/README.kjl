@@ -1,0 +1,26 @@
+# Data provenance
+
+## WormBase Parasite
+
+c_elegans_go_terms_prjna13758.csv
+
+Downloaded using BioMart with the following settings:
+
+1. Query Filters
+Genome: [Species-list specified]
+Gene type: Protein Coding
+GO term(s) [e.g. regulation of biological process]: [ID-list specified]
+2. Output Attributes
+Genome project
+Gene stable ID
+GO term accession
+GO term name
+GO term definition
+GO term evidence code
+GO domain
+Gene name
+
+# Gene Ontology
+
+wb.gaf.gz
+http://current.geneontology.org/annotations/wb.gaf.gz

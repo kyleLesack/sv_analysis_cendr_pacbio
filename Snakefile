@@ -1,6 +1,5 @@
 ALL_STRAINS = ["JU1400", "NIC2", "JU2526", "XZ1516", "MY2693", "QX1794", "NIC526", "DL238", "ECA396","JU2600","ECA36","EG4725","MY2147","JU310"]
 REFERENCE = "0_input/reference/c_elegans.PRJNA13758.WS263.genomic.fa" # C. elegans reference genome
-#SAM_ALIGNERS = ["ngmlr","minimap2"] # Aligners that output sam files
 
 rule all:
 	input:

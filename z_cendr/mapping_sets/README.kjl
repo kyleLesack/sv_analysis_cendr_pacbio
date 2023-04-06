@@ -8,4 +8,20 @@ Copy set strains from:
 https://www.elegansvariation.org/strains/catalog
 sort with sort_sets.sh
 find . -maxdepth 1 -name "*set*.txt" -exec comm -12 pacbio.txt {} \; | sort -u > intersection/all_sets_with_pacbio_strains.txt
-find . -maxdepth 1 -name "*.txt" -exec grep -H -wFf intersection/all_sets_with_pacbio_strains.txt {} \;
+find . -maxdepth 1 -name "*set*" -exec grep -HwFf intersection/all_sets_with_pacbio_strains.txt {} \; | sort  > intersection/all_sets_with_pacbio_strains_names.txt
+
+grep -wFf divergent_set.txt ../bam_bai_signed_download_script.sh > ../dl_divergent.sh
+grep -wFf set_1.txt ../bam_bai_signed_download_script.sh > ../dl_set_1.sh
+grep -wFf set_2.txt ../bam_bai_signed_download_script.sh > ../dl_set_2.sh
+grep -wFf set_3.txt ../bam_bai_signed_download_script.sh > ../dl_set_3.sh
+grep -wFf set_4.txt ../bam_bai_signed_download_script.sh > ../dl_set_4.sh
+grep -wFf set_5.txt ../bam_bai_signed_download_script.sh > ../dl_set_5.sh
+
+cat mapping_sets/intersection/all_sets_with_pacbio_strains_names.txt  | cut -d ":" -f 1 | sort | uniq -c | sort
+1 ./set_5.txt
+2 ./divergent_set.txt
+2 ./set_2.txt
+2 ./set_3.txt
+3 ./set_1.txt
+4 ./set_4.txt
+

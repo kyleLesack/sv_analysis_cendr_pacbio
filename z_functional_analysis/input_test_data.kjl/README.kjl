@@ -1,0 +1,7 @@
+Test data was obtained here:
+
+/work/wasmuth_lab/mrkyle/sv_calling_benchmarking-2022_08_23_revisions/real_data_concatenated_genes/longread/2_overlap_analysis/6_cnv_overlap_between_callers/deletions/MAXSIZE-50k/intersections/5-callers/assemblytics_-mumandco-pbsv-sniffles-svim/strains/DL238.txt
+
+Gene names are stored in the Entrez and WormBase styles:
+entrez_genes.txt
+wormbase_genes.txt

@@ -1,0 +1,14 @@
+./divergent_set.txt:DL238
+./divergent_set.txt:EG4725
+./set_1.txt:ECA36
+./set_1.txt:NIC2
+./set_1.txt:QX1794
+./set_2.txt:JU1400
+./set_2.txt:JU310
+./set_3.txt:JU2526
+./set_3.txt:NIC526
+./set_4.txt:ECA396
+./set_4.txt:JU2600
+./set_4.txt:MY2693
+./set_4.txt:XZ1516
+./set_5.txt:MY2147
