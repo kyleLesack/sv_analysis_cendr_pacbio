@@ -43,11 +43,9 @@ rule svim:
 	        bamfile="1_alignments/ngmlr/{strain}/{strain}_sorted.bam",
 	        bamindex="1_alignments/ngmlr/{strain}/{strain}_sorted.bai"
 	output:
-		"2_variant_calls/{aligner}/svim/{strain}/variants.vcf"
-	wildcard_constraints:
-		aligner = "|".join(SNIFFLES_SVIM_ALIGNERS),
+		"2_variant_calls/ngmlr/svim/{strain}/variants.vcf"
 	params:
-		outdir="3_variant_calls/{depth}/{aligner}/svim/{strain}/{readorder}/"
+		outdir="2_variant_calls/ngmlr/svim/{strain}/variants.vcf"
 	conda:  "yaml/svim2.yaml"
 	threads: 8
 	resources:
