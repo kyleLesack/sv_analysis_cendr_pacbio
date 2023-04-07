@@ -77,7 +77,7 @@ rule svim:
 # Call SVs with SVIM
 rule svim_subsampled:
 	input:
-	        bamfile="1_alignments/ngmlr/{strain}/{strain}_picard_sorted.bam",
+	        bamfile="1_alignments/ngmlr.subsampled_40X/{strain}/{strain}_picard_sorted.bam",
 	        bamindex="1_alignments/ngmlr.subsampled_40X/{strain}/{strain}_picard_sorted.bam"
 	output:
 		"2_variant_calls/ngmlr.subsampled_40X/svim/{strain}/variants.vcf"
