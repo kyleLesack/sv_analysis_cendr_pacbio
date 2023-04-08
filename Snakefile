@@ -34,7 +34,7 @@ rule picard_sort:
 	        picard_cmd=r"""java "-Xmx60g" -jar /home/kyle.lesack1/miniconda3/envs/picardtools/share/picard-2.27.5-0/picard.jar SortSam """,
 			max_records="25000",
 			tempindex="1_alignments/ngmlr/{strain}/{strain}_picard_sorted.bai"
-	conda:  "yaml/picardtools.v2.27.5"
+	conda:  "yaml/picardtools.v2.27.5.yaml"
 	#conda:  "yaml/picardtools.v2.27.5_rename" #rename 's/\.bai/.bam.bai/' {params.tempindex}
 	threads: 8
 	resources:
