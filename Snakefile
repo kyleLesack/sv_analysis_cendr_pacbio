@@ -103,7 +103,6 @@ rule picard_sort_subsampled:
 			"1_alignments/ngmlr.subsampled_40X/{strain}/{strain}_picard_sorted.bam"
 	output:
 	        bamfile="1_alignments/ngmlr.subsampled.picard_sorted/{strain}/{strain}_picard_sorted.bam",
-	        bamindex="1_alignments/ngmlr.subsampled.picard_sorted/{strain}/{strain}_picard_sorted.bam.bai"
 	params:
 	        picard_cmd=r"""java "-Xmx60g" -jar /home/kyle.lesack1/miniconda3/envs/picardtools/share/picard-2.27.5-0/picard.jar SortSam """,
 			max_records="25000"
