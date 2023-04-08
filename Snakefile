@@ -39,7 +39,6 @@ rule picard_sort:
 	resources:
 	        mem_mb=lambda _, attempt: 60000 + ((attempt - 1) * 10000),
 	        time_hms="02:00:00"
-	shell:
 	shell: """
 	        {params.picard_cmd} -I {input} -O {output.bamfile} -SORT_ORDER coordinate -VALIDATION_STRINGENCY LENIENT --CREATE_INDEX --MAX_RECORDS_IN_RAM {params.max_records}
 			rename 's/\.bai/.bam.bai/' {params.tempindex}
