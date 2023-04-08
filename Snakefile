@@ -46,10 +46,10 @@ rule picard_sort:
 # I can't seem to get the rename command to work with the picard sort rule. Might be a Slurm issue
 rule copy_bam_index:
 	input:
-			"1_alignments/ngmlr/{strain}/{strain}_picard_sorted.bai"
+			"1_alignments/{alignment_dir}/{strain}/{strain}_picard_sorted.bai"
 
 	output:
-	        "1_alignments/ngmlr/{strain}/{strain}_picard_sorted.bam.bai"
+	        "1_alignments/{alignment_dir}/{strain}/{strain}_picard_sorted.bam.bai"
 	threads: 1
 	resources:
 	        mem_mb=lambda _, attempt: 1000 + ((attempt - 1) * 10000),
