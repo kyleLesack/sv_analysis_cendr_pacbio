@@ -34,14 +34,15 @@ rule picard_sort:
 	        picard_cmd=r"""java "-Xmx60g" -jar /home/kyle.lesack1/miniconda3/envs/picardtools/share/picard-2.27.5-0/picard.jar SortSam """,
 			max_records="25000",
 			tempindex="1_alignments/ngmlr/{strain}/{strain}_picard_sorted.bai"
-	conda:  "yaml/picardtools.v2.27.5_rename"
+	conda:  "yaml/picardtools.v2.27.5"
+	#conda:  "yaml/picardtools.v2.27.5_rename" #rename 's/\.bai/.bam.bai/' {params.tempindex}
 	threads: 8
 	resources:
 	        mem_mb=lambda _, attempt: 60000 + ((attempt - 1) * 10000),
 	        time_hms="02:00:00"
 	shell: """
 	        {params.picard_cmd} -I {input} -O {output.bamfile} -SORT_ORDER coordinate -VALIDATION_STRINGENCY LENIENT --CREATE_INDEX --MAX_RECORDS_IN_RAM {params.max_records}
-			rename 's/\.bai/.bam.bai/' {params.tempindex}
+			rename -n bai bam.bai {params.tempindex}
 	"""
 
 # Call SVs with SVIM
