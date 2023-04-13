@@ -146,7 +146,6 @@ rule jasmine_dup_to_ins:
 		"""
 			echo {input} | tr " " "\n" > 3_jasmine/{wildcards.alignment_dir}/sniffles/dup_to_ins/filelist.txt
 			jasmine --dup_to_ins --preprocess_only file_list=3_jasmine/{wildcards.alignment_dir}/sniffles/dup_to_ins/filelist.txt out_file={output} genome_file={params.reference_genome} out_dir={params.out_dir}
-			mv output/* 3_jasmine/{wildcards.alignment_dir}/sniffles/dup_to_ins/
 		"""
 
 rule iris:
