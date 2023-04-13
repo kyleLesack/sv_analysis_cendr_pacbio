@@ -8,8 +8,9 @@ rule all:
 		#expand("1_alignments/{alignment_dir}/{strain}/{strain}_picard_sorted.{extension}", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS, extension=["bam","bam.bai"]),
 		#expand("1_alignments/ngmlr.subsampled_40X/{strain}/{strain}_picard_sorted.bam", strain=ALL_STRAINS),
 		#expand("1_alignments/ngmlr.subsampled.picard_sorted/{strain}/{strain}_picard_sorted.bam", strain=ALL_STRAINS), # use diff on these and subsampled. Remove this if same.
-		#expand("2_variant_calls/{alignment_dir}/sniffles/{strain}/variants.vcf", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS),
-		expand("2_variant_calls/{alignment_dir}/sniffles/{strain}/{strain}.vcf.gz", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS),
+		expand("2_variant_calls/{alignment_dir}/sniffles/{strain}/{strain}.{extension}", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS, extension=["vcf", "vcf.gz"]),
+		expand("3_jasmine/{alignment_dir}/sniffles/dup_to_ins/{strain}_dupToIns.vcf", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS),
+		expand("3_jasmine/{alignment_dir}/sniffles/dup_to_ins/{strain}_dupToIns_refined.vcf", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS),
 		#expand("2_variant_calls/{alignment_dir}/sniffles/{strain}/variants.sorted.vcf", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS),
 		#expand("2_variant_calls/{alignment_dir}/sniffles/{strain}/filtered/passed/passed.sorted.{extension}", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS, extension = ["vcf","vcf.gz"]),
 		#expand("2_variant_calls/{alignment_dir}/sniffles/{strain}/filtered/passed/merged/passed.sorted.merged.vcf.{extension}", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS, extension = ["gz", "gz.tbi"]),
@@ -64,7 +65,7 @@ rule sniffles:
 		mem_mb=lambda _, attempt: 20000 + ((attempt - 1) * 10000),
 		time_hms="02:00:00"
 	shell:
-		"sniffles --input {input.bamfile} --snf 2_variant_calls/{wildcards.alignment_dir}/sniffles/{wildcards.strain}/{wildcards.strain}.snf --minsvlen {params.minsize} --reference {REFERENCE} --sample-id {wildcards.strain} -t 8 --vcf {output} "
+		"sniffles --input {input.bamfile} -n -1 --snf 2_variant_calls/{wildcards.alignment_dir}/sniffles/{wildcards.strain}/{wildcards.strain}.snf --minsvlen {params.minsize} --reference {REFERENCE} --sample-id {wildcards.strain} -t 8 --vcf {output} "
 
 # Call SVs with SVIM
 rule sort_svim:
@@ -115,64 +116,56 @@ rule filter_svim:
 	script:
 		"scripts/1_process_results/parse_svim.py"
 
-rule collapse_redundant_svim:
+rule bgzip_decompress_vcf_gz:
 	input:
-		"2_variant_calls/{alignment_dir}/sniffles/{strain}/filtered/passed/passed.sorted.vcf.gz"
+		"2_variant_calls/{alignment_dir}/sniffles/{strain}/{strain}.vcf.gz"
 	output:
-		temp("2_variant_calls/{alignment_dir}/sniffles/{strain}/filtered/passed/merged/passed.sorted.merged.vcf")
+		"2_variant_calls/{alignment_dir}/sniffles/{strain}/{strain}.vcf"
+	conda:  "yaml/jasmine.yaml"
+	threads: 1
+	resources:
+		mem_mb=lambda _, attempt: 1000 + ((attempt - 1) * 10000),
+		time_hms="00:05:00"
+	shell:
+		"""bgzip -d -k {input}"""
+
+rule jasmine_dup_to_ins:
+	input:
+		expand("2_variant_calls/{alignment_dir}/sniffles/{strain}/{strain}.vcf", strain=ALL_STRAINS, allow_missing=True),
+	output:
+		expand("3_jasmine/{alignment_dir}/sniffles/dup_to_ins/{strain}_dupToIns.vcf", strain=ALL_STRAINS, allow_missing=True),
 	params:
-		collapsed_file = "2_variant_calls/{alignment_dir}/sniffles/{strain}/filtered/passed/merged/passed.sorted.collapsed.vcf",
-		sizemin = "100",
-		sizemax = "100000",
-		sv_to_keep = "maxqual",
 		reference_genome = REFERENCE
-	conda:  "yaml/truvari.yaml"
+	conda:  "yaml/jasmine.yaml"
 	threads: 1
 	resources:
 		mem_mb=lambda _, attempt: 1000 + ((attempt - 1) * 10000),
 		time_hms="00:05:00"
 	shell:
-		"truvari collapse -i {input} -o {output} -c {params.collapsed_file} -f {params.reference_genome} --keep {params.sv_to_keep} --sizemin {params.sizemin} --sizemax {params.sizemax}"
+		"""
+			echo {input} | tr " " "\n" > 3_jasmine/{wildcards.alignment_dir}/sniffles/dup_to_ins/filelist.txt
+			jasmine --dup_to_ins --preprocess_only file_list=3_jasmine/{wildcards.alignment_dir}/sniffles/dup_to_ins/filelist.txt out_file={output} genome_file={params.reference_genome}
+			mv output/* 3_jasmine/{wildcards.alignment_dir}/sniffles/dup_to_ins/
+		"""
 
-rule compress_index_vcf:
+rule iris:
 	input:
-		"2_variant_calls/{alignment_dir}/sniffles/{strain}/filtered/passed/merged/passed.sorted.merged.vcf"
+		"3_jasmine/{alignment_dir}/sniffles/dup_to_ins/{strain}_dupToIns.vcf"
 	output:
-		expand("2_variant_calls/{alignment_dir}/sniffles/{strain}/filtered/passed/merged/passed.sorted.merged.vcf.{extension}", extension = ["gz", "gz.tbi"], allow_missing=True)
+		"3_jasmine/{alignment_dir}/sniffles/dup_to_ins/{strain}_dupToIns_refined.vcf"
 	params:
-		compressed_vcf = "2_variant_calls/{alignment_dir}/sniffles/{strain}/filtered/passed/merged/passed.sorted.merged.vcf.gz"
-	conda:  "yaml/htslib.yaml"
+		reference_genome = REFERENCE,
+		bamfile="1_alignments/{wildcards.alignment_dir}/{wildcards.strain}/{wildcards.strain}_picard_sorted.bam",
+		min_ins_length="100",
+		out_dir="3_jasmine/{wildcards.alignment_dir}/sniffles/dup_to_ins/"
+	conda:  "yaml/jasmine.yaml"
 	threads: 1
 	resources:
 		mem_mb=lambda _, attempt: 1000 + ((attempt - 1) * 10000),
 		time_hms="00:05:00"
 	shell:
-		"bgzip {input}; tabix -f -p vcf {params.compressed_vcf}"
-
-rule merge_samples:
-	input:
-		expand("2_variant_calls/{alignment_dir}/sniffles/{strain}/filtered/passed/merged/passed.sorted.merged.vcf.gz", strain=ALL_STRAINS, allow_missing=True)
-	output:
-		"2_variant_calls/{alignment_dir}/sniffles/all_samples_merged/passed.sorted.merged.vcf.gz"
-	resources:
-		mem_mb=lambda _, attempt: 1000 + ((attempt - 1) * 10000),
-		time_hms="00:05:00"
-	shell:
-		"bcftools merge -m none {input} | bgzip > {output}"
-
-rule split_samples_by_sv_type:
-	input:
-		"2_variant_calls/{alignment_dir}/sniffles/all_samples_merged/passed.sorted.merged.vcf.gz"
-	output:
-		expand("2_variant_calls/{alignment_dir}/sniffles/all_samples_merged/sv_types/svim_{svtype}.vcf", svtype = ["deletions", "tandem_duplications", "interspersed_duplications", "inversions"], allow_missing=True)
-	resources:
-		mem_mb=lambda _, attempt: 1000 + ((attempt - 1) * 10000),
-		time_hms="00:05:00"
-	shell:"""
-		bcftools view 2_variant_calls/{wildcards.alignment_dir}/sniffles/all_samples_merged/passed.sorted.merged.vcf.gz | grep -E '#|SVTYPE=DEL' > 2_variant_calls/{wildcards.alignment_dir}/sniffles/all_samples_merged/sv_types/svim_deletions.vcf
-		bcftools view 2_variant_calls/{wildcards.alignment_dir}/sniffles/all_samples_merged/passed.sorted.merged.vcf.gz | grep -E '#|SVTYPE=DUP:TANDEM' > 2_variant_calls/{wildcards.alignment_dir}/sniffles/all_samples_merged/sv_types/svim_tandem_duplications.vcf
-		bcftools view 2_variant_calls/{wildcards.alignment_dir}/sniffles/all_samples_merged/passed.sorted.merged.vcf.gz | grep -E '#|SVTYPE=DUP:INT' > 2_variant_calls/{wildcards.alignment_dir}/sniffles/all_samples_merged/sv_types/svim_interspersed_duplications.vcf
-		bcftools view 2_variant_calls/{wildcards.alignment_dir}/sniffles/all_samples_merged/passed.sorted.merged.vcf.gz | grep -E '#|SVTYPE=INV' > 2_variant_calls/{wildcards.alignment_dir}/sniffles/all_samples_merged/sv_types/svim_inversions.vcf
+		"""
+		iris genome_in={params.reference_genome} vcf_in={input} reads_in={params.bamfile} vcf_out={output} min_ins_length={params.min_ins_length} out_dir={params.out_dir}
 		"""
 
 # Check if the subsample_ngmlr_40x BAM files remain sorted
