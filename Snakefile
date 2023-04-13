@@ -166,7 +166,7 @@ rule iris:
 		time_hms="05:00:00"
 	shell:
 		"""
-			mkdir {params.out_dir}
+			mkdir -p {params.out_dir}
 			iris genome_in={params.reference_genome} vcf_in={input} reads_in={params.bamfile} vcf_out={output} min_ins_length={params.min_ins_length} out_dir={params.out_dir}
 		"""
 
