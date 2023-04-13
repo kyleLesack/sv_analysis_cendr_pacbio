@@ -136,6 +136,7 @@ rule jasmine_dup_to_ins:
 		expand("3_jasmine/{alignment_dir}/sniffles/dup_to_ins/{strain}_dupToIns.vcf", strain=ALL_STRAINS, allow_missing=True),
 	params:
 		reference_genome = REFERENCE
+		out_dir="3_jasmine/{alignment_dir}/sniffles/dup_to_ins/jasmine_intermediate_files"
 	conda:  "yaml/jasmine.yaml"
 	threads: 1
 	resources:
@@ -144,7 +145,7 @@ rule jasmine_dup_to_ins:
 	shell:
 		"""
 			echo {input} | tr " " "\n" > 3_jasmine/{wildcards.alignment_dir}/sniffles/dup_to_ins/filelist.txt
-			jasmine --dup_to_ins --preprocess_only file_list=3_jasmine/{wildcards.alignment_dir}/sniffles/dup_to_ins/filelist.txt out_file={output} genome_file={params.reference_genome}
+			jasmine --dup_to_ins --preprocess_only file_list=3_jasmine/{wildcards.alignment_dir}/sniffles/dup_to_ins/filelist.txt out_file={output} genome_file={params.reference_genome}  out_dir={params.out_dir}
 			mv output/* 3_jasmine/{wildcards.alignment_dir}/sniffles/dup_to_ins/
 		"""
 
@@ -157,7 +158,7 @@ rule iris:
 		reference_genome = REFERENCE,
 		bamfile="1_alignments/{alignment_dir}/{strain}/{strain}_picard_sorted.bam",
 		min_ins_length="100",
-		out_dir="3_jasmine/{alignment_dir}/sniffles/dup_to_ins/intermediate_files"
+		out_dir="3_jasmine/{alignment_dir}/sniffles/dup_to_ins/iris_intermediate_files"
 	conda:  "yaml/jasmine.yaml"
 	threads: 4
 	resources:
