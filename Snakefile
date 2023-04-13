@@ -10,7 +10,7 @@ rule all:
 		#expand("1_alignments/ngmlr.subsampled.picard_sorted/{strain}/{strain}_picard_sorted.bam", strain=ALL_STRAINS), # use diff on these and subsampled. Remove this if same.
 		expand("2_variant_calls/{alignment_dir}/sniffles/{strain}/{strain}.{extension}", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS, extension=["vcf", "vcf.gz"]),
 		expand("3_jasmine/{alignment_dir}/sniffles/dup_to_ins/{strain}_dupToIns.vcf", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS),
-		expand("3_jasmine/{alignment_dir}/sniffles/dup_to_ins/{strain}_dupToIns_refined.vcf", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS),
+		#expand("3_jasmine/{alignment_dir}/sniffles/dup_to_ins/{strain}_dupToIns_refined.vcf", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS),
 		#expand("2_variant_calls/{alignment_dir}/sniffles/{strain}/variants.sorted.vcf", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS),
 		#expand("2_variant_calls/{alignment_dir}/sniffles/{strain}/filtered/passed/passed.sorted.{extension}", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS, extension = ["vcf","vcf.gz"]),
 		#expand("2_variant_calls/{alignment_dir}/sniffles/{strain}/filtered/passed/merged/passed.sorted.merged.vcf.{extension}", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS, extension = ["gz", "gz.tbi"]),
