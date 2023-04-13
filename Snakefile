@@ -65,7 +65,7 @@ rule sniffles:
 		mem_mb=lambda _, attempt: 20000 + ((attempt - 1) * 10000),
 		time_hms="02:00:00"
 	shell:
-		"sniffles --input {input.bamfile} -n -1 --snf 2_variant_calls/{wildcards.alignment_dir}/sniffles/{wildcards.strain}/{wildcards.strain}.snf --minsvlen {params.minsize} --output-rnames --reference {REFERENCE} --sample-id {wildcards.strain} -t 8 --vcf {output} "
+		"sniffles --input {input.bamfile} --snf 2_variant_calls/{wildcards.alignment_dir}/sniffles/{wildcards.strain}/{wildcards.strain}.snf --minsvlen {params.minsize} --output-rnames --reference {REFERENCE} --sample-id {wildcards.strain} -t 8 --vcf {output} "
 
 # Call SVs with SVIM
 rule sort_svim:
