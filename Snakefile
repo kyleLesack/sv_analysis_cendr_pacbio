@@ -136,7 +136,8 @@ rule jasmine_dup_to_ins:
 		expand("3_jasmine/{alignment_dir}/sniffles/dup_to_ins/{strain}_dupToIns.vcf", strain=ALL_STRAINS, allow_missing=True),
 	params:
 		reference_genome = REFERENCE,
-		out_dir="3_jasmine/{alignment_dir}/sniffles/dup_to_ins/jasmine_intermediate_files"
+		out_dir="3_jasmine/{alignment_dir}/sniffles/dup_to_ins/",
+		out_file="3_jasmine/{alignment_dir}/sniffles/dup_to_ins/dummy.vcf" # I don't think this is used when Jasmine is run with the option --preprocess_only
 	conda:  "yaml/jasmine.yaml"
 	threads: 1
 	resources:
@@ -144,8 +145,8 @@ rule jasmine_dup_to_ins:
 		time_hms="00:05:00"
 	shell:
 		"""
-			echo {input} | tr " " "\n" > 3_jasmine/{wildcards.alignment_dir}/sniffles/dup_to_ins/filelist.txt
-			jasmine --dup_to_ins --preprocess_only file_list=3_jasmine/{wildcards.alignment_dir}/sniffles/dup_to_ins/filelist.txt out_file={output} genome_file={params.reference_genome} out_dir={params.out_dir}
+			echo {input} | tr " " "\n" > 3_jasmine/{wildcards.alignment_dir}/sniffles/dup_to_ins/sniffles_vcf_files.txt
+			jasmine --dup_to_ins --preprocess_only file_list=3_jasmine/{wildcards.alignment_dir}/sniffles/dup_to_ins/sniffles_vcf_files.txt out_file={output} genome_file={params.reference_genome} out_dir={params.out_dir}
 		"""
 
 rule iris:
