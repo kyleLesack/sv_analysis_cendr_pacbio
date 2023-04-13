@@ -162,8 +162,8 @@ rule iris:
 	conda:  "yaml/jasmine.yaml"
 	threads: 4
 	resources:
-		mem_mb=lambda _, attempt: 5000 + ((attempt - 1) * 10000),
-		time_hms="05:00:00"
+		mem_mb=lambda _, attempt: 60000 + ((attempt - 1) * 10000),
+		time_hms="12:00:00"
 	shell:
 		"""
 			mkdir -p {params.out_dir}
