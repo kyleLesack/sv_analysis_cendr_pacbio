@@ -159,9 +159,9 @@ rule iris:
 		min_ins_length="100",
 		out_dir="3_jasmine/{wildcards.alignment_dir}/sniffles/dup_to_ins/"
 	conda:  "yaml/jasmine.yaml"
-	threads: 1
+	threads: 4
 	resources:
-		mem_mb=lambda _, attempt: 1000 + ((attempt - 1) * 10000),
+		mem_mb=lambda _, attempt: 5000 + ((attempt - 1) * 10000),
 		time_hms="00:05:00"
 	shell:
 		"""
