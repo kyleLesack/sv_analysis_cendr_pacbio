@@ -159,11 +159,11 @@ rule iris:
 		bamfile="1_alignments/{alignment_dir}/{strain}/{strain}_picard_sorted.bam",
 		min_ins_length="100",
 		out_dir="3_jasmine/{alignment_dir}/sniffles/dup_to_ins/iris_intermediate_files/{strain}"
-	conda:  "yaml/jasmine.yaml"
+	conda:  "yaml/iris.yaml"
 	threads: 4
 	resources:
-		mem_mb=lambda _, attempt: 60000 + ((attempt - 1) * 10000),
-		time_hms="12:00:00"
+		mem_mb=lambda _, attempt: 20000 + ((attempt - 1) * 10000),
+		time_hms="05:00:00"
 	shell:
 		"""
 			mkdir -p {params.out_dir}
