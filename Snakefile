@@ -186,7 +186,8 @@ rule jasmine_mark_specific:
 		reference_genome = REFERENCE,
 		out_dir="3_jasmine/{alignment_dir}/sniffles/specific/",
 		spec_len="100",
-		spec_reads=lambda wcs: MIN_SUPPORT_JASMINE[wcs.strain]
+		spec_reads=lambda wcs: MIN_SUPPORT_JASMINE[wcs.strain],
+		file_list="3_jasmine/{alignment_dir}/sniffles/specific/{strain}_sniffles_vcf_file_refined.txt"
 		#spec_reads="10",
 	conda:  "yaml/jasmine.yaml"
 	threads: 1
@@ -195,9 +196,10 @@ rule jasmine_mark_specific:
 		time_hms="00:05:00"
 	shell:
 		"""
-			jasmine --mark_specific spec_reads={params.spec_reads} spec_len={params.spec_len} --preprocess_only file_list={input} out_file={output} genome_file={params.reference_genome} out_dir={params.out_dir}
+			echo {input} > {params.file_list}
+			jasmine --mark_specific spec_reads={params.spec_reads} spec_len={params.spec_len} --preprocess_only file_list={params.file_list} out_file={output} genome_file={params.reference_genome} out_dir={params.out_dir}
 		"""
-		#echo {input} | tr " " "\n" > 3_jasmine/{wildcards.alignment_dir}/sniffles/specific/sniffles_vcf_files_refined.txt
+
 
 # Check if the subsample_ngmlr_40x BAM files remain sorted
 #rule picard_sort_subsampled:
