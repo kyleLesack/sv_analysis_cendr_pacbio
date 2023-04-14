@@ -1,16 +1,18 @@
 ALL_STRAINS = ['DL238', 'ECA36', 'ECA396', 'EG4725', 'JU1400', 'JU2526', 'JU2600', 'JU310', 'MY2147', 'MY2693', 'NIC2', 'NIC526', 'QX1794', 'XZ1516']
 REFERENCE = "0_input/reference/c_elegans.PRJNA13758.WS263.genomic.fa" # C. elegans reference genome
-NGMLRDICT40X = {"DL238": "0.24", "DRR142768": "0.52", "ECA36": "0.19", "ECA396": "0.30", "EG4725": "0.18", "JU1400": "0.34", "JU2526": "0.33", "JU2600": "0.22", "JU310": "0.25", "MY2147":"0.21", "MY2693": "0.31", "NIC2": "0.33", "NIC526": "0.27", "QX1794": "0.32","XZ1516": "0.54"}
 ALIGNMENT_DIR = ["ngmlr", "ngmlr.subsampled_40X"]
+MIN_SUPPORT_JASMINE = {"DL238": "42", "ECA36": "51", "ECA396": "33", "EG4725": "54", "JU1400": "29", "JU2526": "30", "JU2600": "44", "JU310": "40", "MY2147": "46", "MY2693": "32", "NIC2": "30", "NIC526": "37", "QX1794": "31", "XZ1516": "18"} # 25% of the sequencing depth for each sample bam file
 
 rule all:
 	input:
 		#expand("1_alignments/{alignment_dir}/{strain}/{strain}_picard_sorted.{extension}", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS, extension=["bam","bam.bai"]),
 		#expand("1_alignments/ngmlr.subsampled_40X/{strain}/{strain}_picard_sorted.bam", strain=ALL_STRAINS),
 		#expand("1_alignments/ngmlr.subsampled.picard_sorted/{strain}/{strain}_picard_sorted.bam", strain=ALL_STRAINS), # use diff on these and subsampled. Remove this if same.
-		expand("2_variant_calls/{alignment_dir}/sniffles/{strain}/{strain}.{extension}", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS, extension=["vcf", "vcf.gz"]),
-		expand("3_jasmine/{alignment_dir}/sniffles/dup_to_ins/{strain}_dupToIns.vcf", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS),
-		expand("3_jasmine/{alignment_dir}/sniffles/dup_to_ins/{strain}_dupToIns_refined.vcf", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS),
+		#expand("2_variant_calls/{alignment_dir}/sniffles/{strain}/{strain}.{extension}", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS, extension=["vcf", "vcf.gz"]),
+		#expand("3_jasmine/{alignment_dir}/sniffles/dup_to_ins/{strain}_dupToIns.vcf", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS),
+		#expand("3_jasmine/{alignment_dir}/sniffles/dup_to_ins/{strain}_dupToIns_refined.vcf", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS),
+		expand("3_jasmine/{alignment_dir}/sniffles/normalized/{strain}_dupToIns_refined_normalizeTypes.vcf", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS),
+		expand("3_jasmine/{alignment_dir}/sniffles/specific/{strain}_dupToIns_refined_normalizeTypes_specific.vcf", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS),
 		#expand("2_variant_calls/{alignment_dir}/sniffles/{strain}/variants.sorted.vcf", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS),
 		#expand("2_variant_calls/{alignment_dir}/sniffles/{strain}/filtered/passed/passed.sorted.{extension}", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS, extension = ["vcf","vcf.gz"]),
 		#expand("2_variant_calls/{alignment_dir}/sniffles/{strain}/filtered/passed/merged/passed.sorted.merged.vcf.{extension}", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS, extension = ["gz", "gz.tbi"]),
@@ -169,6 +171,49 @@ rule iris:
 			mkdir -p {params.out_dir}
 			iris genome_in={params.reference_genome} vcf_in={input} reads_in={params.bamfile} vcf_out={output} min_ins_length={params.min_ins_length} out_dir={params.out_dir}
 		"""
+# Documented as "run type normalization before merging". Seems to convert BND to TRA
+rule jasmine_normalize:
+	input:
+		expand("3_jasmine/{alignment_dir}/sniffles/dup_to_ins/{strain}_dupToIns_refined.vcf", strain=ALL_STRAINS, allow_missing=True),
+	output:
+		expand("3_jasmine/{alignment_dir}/sniffles/normalized/{strain}_dupToIns_refined_normalizeTypes.vcf", strain=ALL_STRAINS, allow_missing=True),
+	params:
+		reference_genome = REFERENCE,
+		out_dir="3_jasmine/{alignment_dir}/sniffles/normalized/",
+	conda:  "yaml/jasmine.yaml"
+	threads: 1
+	resources:
+		mem_mb=lambda _, attempt: 1000 + ((attempt - 1) * 10000),
+		time_hms="00:05:00"
+	shell:
+		"""
+			echo {input} | tr " " "\n" > 3_jasmine/{wildcards.alignment_dir}/sniffles/normalized/sniffles_vcf_files_refined.txt
+			jasmine --pre_normalize  --preprocess_only file_list=3_jasmine/{wildcards.alignment_dir}/sniffles/normalized/sniffles_vcf_files_refined.txt out_file={output} genome_file={params.reference_genome} out_dir={params.out_dir}
+		"""
+
+# Documented as "mark calls in the original VCF files that have enough support to called specific". On GitHub pipeline it is described as "Mark high-confidence callset (high-specificity callset) in each sample"
+rule jasmine_mark_specific:
+	input:
+		expand("3_jasmine/{alignment_dir}/sniffles/normalized/{strain}_dupToIns_refined_normalizeTypes.vcf", strain=ALL_STRAINS, allow_missing=True),
+	output:
+		expand("3_jasmine/{alignment_dir}/sniffles/specific/{strain}_dupToIns_refined_normalizeTypes_specific.vcf", strain=ALL_STRAINS, allow_missing=True),
+	params:
+		reference_genome = REFERENCE,
+		out_dir="3_jasmine/{alignment_dir}/sniffles/specific/",
+		spec_len="100",
+		spec_reads=lambda wcs: MIN_SUPPORT_JASMINE[wcs.strain]
+		#spec_reads="10",
+	conda:  "yaml/jasmine.yaml"
+	threads: 1
+	resources:
+		mem_mb=lambda _, attempt: 1000 + ((attempt - 1) * 10000),
+		time_hms="00:05:00"
+	shell:
+		"""
+			echo {input} | tr " " "\n" > 3_jasmine/{wildcards.alignment_dir}/sniffles/specific/sniffles_vcf_files_refined.txt
+			jasmine --mark_specific spec_reads={params.spec_reads} spec_len={params.spec_len} --preprocess_only file_list=3_jasmine/{wildcards.alignment_dir}/sniffles/specific/sniffles_vcf_files_refined.txt out_file={output} genome_file={params.reference_genome} out_dir={params.out_dir}
+		"""
+
 
 # Check if the subsample_ngmlr_40x BAM files remain sorted
 #rule picard_sort_subsampled:
