@@ -84,21 +84,6 @@ rule sort_svim:
 	shell:
 		"picard SortVcf I={input} O={output}"
 
-rule subsample_ngmlr_40x:
-	input:
-		"1_alignments/ngmlr/{strain}/{strain}_picard_sorted.bam"
-	output:
-		"1_alignments/ngmlr.subsampled_40X/{strain}/{strain}_sorted.bam"
-	params:
-		value=lambda wcs: NGMLRDICT40X[wcs.strain]
-	conda:  "yaml/samtools_1.9.yaml"
-	threads: 4
-	resources:
-		mem_mb=lambda _, attempt: 10000 + ((attempt - 1) * 10000),
-		time_hms="08:00:00"
-	shell:
-		"""samtools view -@ {threads} -b -s {params.value} {input} > {output}"""
-
 rule filter_svim:
 	input:
 		"2_variant_calls/{alignment_dir}/sniffles/{strain}/variants.sorted.vcf"
