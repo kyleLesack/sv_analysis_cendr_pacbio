@@ -181,7 +181,7 @@ rule jasmine_mark_specific:
 	input:
 		"3_jasmine/{alignment_dir}/sniffles/normalized/{strain}_dupToIns_refined_normalizeTypes.vcf"
 	output:
-		"3_jasmine/{alignment_dir}/sniffles/specific/{strain}_dupToIns_refined_normalizeTypes_specific.vcf"
+		"3_jasmine/{alignment_dir}/sniffles/specific/{strain}_dupToIns_refined_normalizeTypes_markedSpec.vcf"
 	params:
 		reference_genome = REFERENCE,
 		out_dir="3_jasmine/{alignment_dir}/sniffles/specific/",
