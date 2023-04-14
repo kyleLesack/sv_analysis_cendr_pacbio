@@ -179,9 +179,9 @@ rule jasmine_normalize:
 # Documented as "mark calls in the original VCF files that have enough support to called specific". On GitHub pipeline it is described as "Mark high-confidence callset (high-specificity callset) in each sample"
 rule jasmine_mark_specific:
 	input:
-		expand("3_jasmine/{alignment_dir}/sniffles/normalized/{strain}_dupToIns_refined_normalizeTypes.vcf", strain=ALL_STRAINS, allow_missing=True),
+		"3_jasmine/{alignment_dir}/sniffles/normalized/{strain}_dupToIns_refined_normalizeTypes.vcf"
 	output:
-		expand("3_jasmine/{alignment_dir}/sniffles/specific/{strain}_dupToIns_refined_normalizeTypes_specific.vcf", strain=ALL_STRAINS, allow_missing=True),
+		"3_jasmine/{alignment_dir}/sniffles/specific/{strain}_dupToIns_refined_normalizeTypes_specific.vcf"
 	params:
 		reference_genome = REFERENCE,
 		out_dir="3_jasmine/{alignment_dir}/sniffles/specific/",
@@ -195,10 +195,9 @@ rule jasmine_mark_specific:
 		time_hms="00:05:00"
 	shell:
 		"""
-			echo {input} | tr " " "\n" > 3_jasmine/{wildcards.alignment_dir}/sniffles/specific/sniffles_vcf_files_refined.txt
-			jasmine --mark_specific spec_reads={params.spec_reads} spec_len={params.spec_len} --preprocess_only file_list=3_jasmine/{wildcards.alignment_dir}/sniffles/specific/sniffles_vcf_files_refined.txt out_file={output} genome_file={params.reference_genome} out_dir={params.out_dir}
+			jasmine --mark_specific spec_reads={params.spec_reads} spec_len={params.spec_len} --preprocess_only file_list={input} out_file={output} genome_file={params.reference_genome} out_dir={params.out_dir}
 		"""
-
+		#echo {input} | tr " " "\n" > 3_jasmine/{wildcards.alignment_dir}/sniffles/specific/sniffles_vcf_files_refined.txt
 
 # Check if the subsample_ngmlr_40x BAM files remain sorted
 #rule picard_sort_subsampled:
