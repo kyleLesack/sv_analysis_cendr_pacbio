@@ -1,0 +1,14 @@
+Total number of inversions found in DL238: 182
+Total number of inversions found in ECA36: 220
+Total number of inversions found in ECA396: 217
+Total number of inversions found in EG4725: 170
+Total number of inversions found in JU1400: 133
+Total number of inversions found in JU2526: 166
+Total number of inversions found in JU2600: 122
+Total number of inversions found in JU310: 131
+Total number of inversions found in MY2147: 120
+Total number of inversions found in MY2693: 140
+Total number of inversions found in NIC2: 82
+Total number of inversions found in NIC526: 143
+Total number of inversions found in QX1794: 166
+Total number of inversions found in XZ1516: 246

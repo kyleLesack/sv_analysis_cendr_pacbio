@@ -1,0 +1,14 @@
+Total number of singletons vep duplications in DL238: 16
+Total number of singletons vep duplications in ECA36: 24
+Total number of singletons vep duplications in ECA396: 22
+Total number of singletons vep duplications in EG4725: 12
+Total number of singletons vep duplications in JU1400: 6
+Total number of singletons vep duplications in JU2526: 6
+Total number of singletons vep duplications in JU2600: 14
+Total number of singletons vep duplications in JU310: 7
+Total number of singletons vep duplications in MY2147: 11
+Total number of singletons vep duplications in MY2693: 1
+Total number of singletons vep duplications in NIC2: 3
+Total number of singletons vep duplications in NIC526: 11
+Total number of singletons vep duplications in QX1794: 16
+Total number of singletons vep duplications in XZ1516: 25

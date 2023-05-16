@@ -1,0 +1,14 @@
+Total number of singletons vep deletions in DL238: 87
+Total number of singletons vep deletions in ECA36: 172
+Total number of singletons vep deletions in ECA396: 186
+Total number of singletons vep deletions in EG4725: 36
+Total number of singletons vep deletions in JU1400: 22
+Total number of singletons vep deletions in JU2526: 49
+Total number of singletons vep deletions in JU2600: 37
+Total number of singletons vep deletions in JU310: 31
+Total number of singletons vep deletions in MY2147: 33
+Total number of singletons vep deletions in MY2693: 18
+Total number of singletons vep deletions in NIC2: 9
+Total number of singletons vep deletions in NIC526: 27
+Total number of singletons vep deletions in QX1794: 77
+Total number of singletons vep deletions in XZ1516: 199

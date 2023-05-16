@@ -1,0 +1,14 @@
+Total number of deletions found in DL238: 157
+Total number of deletions found in ECA36: 218
+Total number of deletions found in ECA396: 256
+Total number of deletions found in EG4725: 142
+Total number of deletions found in JU1400: 105
+Total number of deletions found in JU2526: 173
+Total number of deletions found in JU2600: 94
+Total number of deletions found in JU310: 96
+Total number of deletions found in MY2147: 105
+Total number of deletions found in MY2693: 85
+Total number of deletions found in NIC2: 25
+Total number of deletions found in NIC526: 117
+Total number of deletions found in QX1794: 157
+Total number of deletions found in XZ1516: 228

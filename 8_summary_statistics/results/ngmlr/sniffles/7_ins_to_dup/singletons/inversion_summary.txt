@@ -1,0 +1,14 @@
+Total number of singletons inversions in EG4725: 42
+Total number of singletons inversions in JU310: 16
+Total number of singletons inversions in ECA396: 140
+Total number of singletons inversions in ECA36: 147
+Total number of singletons inversions in MY2693: 35
+Total number of singletons inversions in XZ1516: 301
+Total number of singletons inversions in JU1400: 34
+Total number of singletons inversions in DL238: 95
+Total number of singletons inversions in QX1794: 74
+Total number of singletons inversions in JU2526: 55
+Total number of singletons inversions in JU2600: 39
+Total number of singletons inversions in NIC2: 12
+Total number of singletons inversions in NIC526: 22
+Total number of singletons inversions in MY2147: 29

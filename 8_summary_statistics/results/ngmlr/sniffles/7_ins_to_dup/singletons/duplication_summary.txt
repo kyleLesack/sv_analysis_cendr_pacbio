@@ -1,0 +1,14 @@
+Total number of singletons duplications in ECA396: 300
+Total number of singletons duplications in JU310: 72
+Total number of singletons duplications in JU1400: 120
+Total number of singletons duplications in ECA36: 308
+Total number of singletons duplications in MY2147: 85
+Total number of singletons duplications in XZ1516: 266
+Total number of singletons duplications in DL238: 209
+Total number of singletons duplications in MY2693: 84
+Total number of singletons duplications in QX1794: 186
+Total number of singletons duplications in JU2600: 87
+Total number of singletons duplications in NIC526: 78
+Total number of singletons duplications in EG4725: 94
+Total number of singletons duplications in NIC2: 77
+Total number of singletons duplications in JU2526: 96

@@ -1,0 +1,55 @@
+# Check if my script for parsing SVIM vcf files extracts the correct number of SV calls
+find 2_variant_calls/ngmlr/svim/DRR142768/filtered/ -name "*.vcf" -exec cat {} \; | grep -v "#" | grep "SVTYPE" | wc -l
+100655
+grep -v "#" 2_variant_calls/ngmlr/svim/DRR142768/variants.vcf  | grep "SVTYPE" | wc -l
+100655
+
+# Get the SV size distribution
+grep -o -P '(?<=SVLEN=).*(?=;SUPPORT)' 2_variant_calls/ngmlr/svim/DRR142768/filtered/passed/passed_variants.vcf  | sort -n 
+
+# Check if the Truvari collapse results match the number of SVs in the VCF file
+Truvari collapsed 410
+
+grep -v "#" 2_variant_calls/ngmlr/svim/DRR142768/filtered/passed/passed_variants.vcf | wc -l
+410
+
+# Get the breakdown of variants in the Jasmine merged vcf file
+
+cat 3_jasmine/ngmlr/sniffles/8_final/merged_final.vcf | grep -v "BND" | grep -o -P '(?<=SVTYPE=).*(?=;SVLEN)' | sort | uniq -c
+  10850 DEL
+    867 DUP
+   5714 INS
+    781 INV
+
+# Check if my summary stats script makes sense
+python3 scripts/3_summarize_results/summarize_sv_calls.py 3_jasmine/ngmlr/sniffles/7_ins_to_dup/sv_types/DEL_SORTED.vcf doodie  | sort
+Total number of variants found in DL238:2343
+Total number of variants found in ECA36:3522
+Total number of variants found in ECA396:3412
+Total number of variants found in EG4725:1913
+Total number of variants found in JU1400:1692
+Total number of variants found in JU2526:2257
+Total number of variants found in JU2600:1519
+Total number of variants found in JU310:1366
+Total number of variants found in MY2147:1279
+Total number of variants found in MY2693:1251
+Total number of variants found in NIC2:457
+Total number of variants found in NIC526:1544
+Total number of variants found in QX1794:2363
+Total number of variants found in XZ1516:4007
+
+find 3_jasmine/ngmlr/sniffles/5_no_dupes.old/ -name "*.vcf" -printf '%p: ' -exec sh -c "grep -H "SVTYPE=DEL" {} | wc -l" \; | sort
+3_jasmine/ngmlr/sniffles/5_no_dupes.old/DL238_dupToIns_refined_normalizeTypes_markedSpec_no_dupes.vcf: 2343
+3_jasmine/ngmlr/sniffles/5_no_dupes.old/ECA36_dupToIns_refined_normalizeTypes_markedSpec_no_dupes.vcf: 3522
+3_jasmine/ngmlr/sniffles/5_no_dupes.old/ECA396_dupToIns_refined_normalizeTypes_markedSpec_no_dupes.vcf: 3412
+3_jasmine/ngmlr/sniffles/5_no_dupes.old/EG4725_dupToIns_refined_normalizeTypes_markedSpec_no_dupes.vcf: 1913
+3_jasmine/ngmlr/sniffles/5_no_dupes.old/JU1400_dupToIns_refined_normalizeTypes_markedSpec_no_dupes.vcf: 1692
+3_jasmine/ngmlr/sniffles/5_no_dupes.old/JU2526_dupToIns_refined_normalizeTypes_markedSpec_no_dupes.vcf: 2257
+3_jasmine/ngmlr/sniffles/5_no_dupes.old/JU2600_dupToIns_refined_normalizeTypes_markedSpec_no_dupes.vcf: 1519
+3_jasmine/ngmlr/sniffles/5_no_dupes.old/JU310_dupToIns_refined_normalizeTypes_markedSpec_no_dupes.vcf: 1366
+3_jasmine/ngmlr/sniffles/5_no_dupes.old/MY2147_dupToIns_refined_normalizeTypes_markedSpec_no_dupes.vcf: 1279
+3_jasmine/ngmlr/sniffles/5_no_dupes.old/MY2693_dupToIns_refined_normalizeTypes_markedSpec_no_dupes.vcf: 1251
+3_jasmine/ngmlr/sniffles/5_no_dupes.old/NIC2_dupToIns_refined_normalizeTypes_markedSpec_no_dupes.vcf: 457
+3_jasmine/ngmlr/sniffles/5_no_dupes.old/NIC526_dupToIns_refined_normalizeTypes_markedSpec_no_dupes.vcf: 1544
+3_jasmine/ngmlr/sniffles/5_no_dupes.old/QX1794_dupToIns_refined_normalizeTypes_markedSpec_no_dupes.vcf: 2363
+3_jasmine/ngmlr/sniffles/5_no_dupes.old/XZ1516_dupToIns_refined_normalizeTypes_markedSpec_no_dupes.vcf: 4007

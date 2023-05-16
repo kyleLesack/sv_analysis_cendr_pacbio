@@ -1,0 +1,14 @@
+Total number of singletons deletions in XZ1516: 2440
+Total number of singletons deletions in DL238: 804
+Total number of singletons deletions in QX1794: 756
+Total number of singletons deletions in ECA36: 1671
+Total number of singletons deletions in JU1400: 225
+Total number of singletons deletions in JU310: 170
+Total number of singletons deletions in ECA396: 1643
+Total number of singletons deletions in JU2526: 452
+Total number of singletons deletions in MY2147: 217
+Total number of singletons deletions in MY2693: 97
+Total number of singletons deletions in EG4725: 290
+Total number of singletons deletions in NIC526: 179
+Total number of singletons deletions in JU2600: 290
+Total number of singletons deletions in NIC2: 80

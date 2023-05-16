@@ -1,0 +1,3 @@
+Total number of inversions found in JU2526: 1
+Total number of inversions found in JU2600: 1
+Total number of inversions found in XZ1516: 1
