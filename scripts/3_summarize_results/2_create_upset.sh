@@ -21,9 +21,6 @@ rev 8_summary_statistics/results/ngmlr/sniffles/7_ins_to_dup/singletons/inversio
 sed -i '1i Strain, DEL' 8_summary_statistics/results/ngmlr/sniffles/7_ins_to_dup/singletons/deletion_summary.csv
 sed -i '1i Strain, DUP' 8_summary_statistics/results/ngmlr/sniffles/7_ins_to_dup/singletons/duplication_summary.csv
 sed -i '1i Strain, INV' 8_summary_statistics/results/ngmlr/sniffles/7_ins_to_dup/singletons/inversion_summary.csv
-#sed -i '1i Strain, DEL-VEP' 8_summary_statistics/results/ngmlr/sniffles/7_ins_to_dup/singletons/vep_high_impact/deletion_summary.csv
-#sed -i '1i Strain, DUP-VEP' 8_summary_statistics/results/ngmlr/sniffles/7_ins_to_dup/singletons/vep_high_impact/duplication_summary.csv
-#sed -i '1i Strain, INV-VEP' 8_summary_statistics/results/ngmlr/sniffles/7_ins_to_dup/singletons/vep_high_impact/inversion_summary.csv
 
 csvjoin --columns=1 8_summary_statistics/results/ngmlr/sniffles/7_ins_to_dup/singletons/deletion_summary.csv 8_summary_statistics/results/ngmlr/sniffles/7_ins_to_dup/singletons/duplication_summary.csv 8_summary_statistics/results/ngmlr/sniffles/7_ins_to_dup/singletons/inversion_summary.csv > 8_summary_statistics/results/ngmlr/sniffles/7_ins_to_dup/singletons/sv_summary.csv 
 

@@ -95,47 +95,13 @@ for strain in singleton_svs:
 
 if args.plot:
 	strain_sv_ids_df = upset.from_contents(strain_sv_ids)
-	# Another way to calculate singletons
-
-	#singleton_svs = upset.query(strain_sv_ids_df, max_degree=1)
-	#print(singleton_svs.subset_sizes)
-	#singleton_svs_grouped = singleton_svs.data.groupby(['DL238', 'ECA36', 'ECA396', 'EG4725', 'JU1400', 'JU2526', 'JU2600', 'JU310', 'MY2147', 'MY2693', 'NIC2', 'NIC526', 'QX1794', 'XZ1516']).size()
-	#print(singleton_svs_grouped)
-
 	shared_svs_cardinality = upset.query(strain_sv_ids_df, min_degree=2, sort_by="cardinality")
-	#print(type(shared_svs_cardinality))
-	#print(shared_svs_cardinality.subset_sizes)
-	#print(shared_svs_cardinality.category_totals)
-
 	shared_svs_cardinality_grouped = shared_svs_cardinality.data.groupby(['DL238', 'ECA36', 'ECA396', 'EG4725', 'JU1400', 'JU2526', 'JU2600', 'JU310', 'MY2147', 'MY2693', 'NIC2', 'NIC526', 'QX1794', 'XZ1516']).size().sort_values(ascending=False)
 	shared_svs_cardinality_grouped_n20 = shared_svs_cardinality_grouped[:20]
-	#print(shared_svs_cardinality_grouped_n20)
-	#input("")
 	upset.UpSet(shared_svs_cardinality_grouped, show_counts=True, sort_by='cardinality', min_subset_size = args.min_subset_size, totals_plot_elements = 20).plot()
 
 	shared_svs_degree = upset.query(strain_sv_ids_df, min_degree=2, sort_by="-degree")
-	#input("")
-	#print(shared_svs_degree.category_totals)
 	shared_svs_degree_grouped = shared_svs_degree.data.groupby(['DL238', 'ECA36', 'ECA396', 'EG4725', 'JU1400', 'JU2526', 'JU2600', 'JU310', 'MY2147', 'MY2693', 'NIC2', 'NIC526', 'QX1794', 'XZ1516']).size().sort_values(ascending=False)
-	#shared_svs_degree_grouped_n20 = shared_svs_degree_grouped[:20]
-	#print(shared_svs_degree_grouped_n20)
 	upset.UpSet(shared_svs_degree_grouped, show_counts=True, sort_by='-degree', min_degree=int(args.min_degree)).plot()
 
-	#strain_sv_ids_df = strain_sv_ids_df.groupby(['DL238', 'ECA36', 'ECA396', 'EG4725', 'JU1400', 'JU2526', 'JU2600', 'JU310', 'MY2147', 'MY2693', 'NIC2', 'NIC526', 'QX1794', 'XZ1516']).size().sort_values(ascending=False)
-	#print(strain_sv_ids_df)
-	#strain_sv_ids_df_largest = strain_sv_ids_df[:19]
-
-	#upset.UpSet(strain_sv_ids_df_largest, show_counts=True, sort_by='cardinality', totals_plot_elements = 20).plot()
-	#ax_dict = upset.UpSet(strain_sv_ids_df, show_counts=True, min_degree=2, sort_by='cardinality').plot()
 	pyplot.show()
-	#input("")
-
-	#upset.plot(strain_sv_ids_df)
-	#upset.plot(strain_sv_ids_df, subset_size='count')
-	#print(type(strain_sv_ids_df))
-	#print(strain_sv_ids_df)
-
-	#sv_id_plot = upset.UpSet(strain_sv_ids_df, subset_size='count').plot()
-	#upset.plot(sv_id_plot)
-
-	#pyplot.show()

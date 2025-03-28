@@ -22,8 +22,6 @@ def parse_svim(svim_variants):
 			line_split = line.split()
 			chromosome = line_split[0]
 			start_coord = line_split[1]
-			#variant_name = line_split[2]
-			#line = line.replace(variant_name, "svim_sv")
 			variant_qual = int(line_split[5]) # svim qual score
 			filter_value = line_split[6] # Describes if variant call passed. Most calls are designated as PASSED, so I probably can ignore the rest, which are probably low quality anyways.
 			info_line = line_split[7] # Get info field metadata

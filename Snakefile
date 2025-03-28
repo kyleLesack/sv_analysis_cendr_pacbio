@@ -1,15 +1,13 @@
 ALL_STRAINS = ['DL238', 'ECA36', 'ECA396', 'EG4725', 'JU1400', 'JU2526', 'JU2600', 'JU310', 'MY2147', 'MY2693', 'NIC2', 'NIC526', 'QX1794', 'XZ1516']
 REFERENCE = "0_input/reference/c_elegans.PRJNA13758.WS263.genomic.fa" # C. elegans reference genome
-#ALIGNMENT_DIR = ["ngmlr", "ngmlr.subsampled_40X"]
 ALIGNMENT_DIR = ["ngmlr"]
 MIN_SUPPORT_JASMINE = {"DL238": "42", "ECA36": "51", "ECA396": "33", "EG4725": "54", "JU1400": "29", "JU2526": "30", "JU2600": "44", "JU310": "40", "MY2147": "46", "MY2693": "32", "NIC2": "30", "NIC526": "37", "QX1794": "31", "XZ1516": "18"} # 25% of the sequencing depth for each sample bam file
 
 rule all:
 	input:
-		#expand("1_alignments/{alignment_dir}/{strain}/{strain}_picard_sorted.{extension}", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS, extension=["bam","bam.bai"]),
-		#expand("1_alignments/ngmlr.subsampled_40X/{strain}/{strain}_picard_sorted.bam", strain=ALL_STRAINS),
-		#expand("1_alignments/ngmlr.subsampled.picard_sorted/{strain}/{strain}_picard_sorted.bam", strain=ALL_STRAINS), # use diff on these and subsampled. Remove this if same.
-		#expand("2_variant_calls/{alignment_dir}/sniffles/{strain}/{strain}.{extension}", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS, extension=["vcf", "vcf.gz"]),
+		expand("1_alignments/{alignment_dir}/{strain}/{strain}_picard_sorted.{extension}", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS, extension=["bam","bam.bai"]),
+		expand("1_alignments/ngmlr.subsampled.picard_sorted/{strain}/{strain}_picard_sorted.bam", strain=ALL_STRAINS), 
+		expand("2_variant_calls/{alignment_dir}/sniffles/{strain}/{strain}.{extension}", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS, extension=["vcf", "vcf.gz"]),
 		expand("3_jasmine/{alignment_dir}/sniffles/1_dup_to_ins/{strain}_dupToIns.vcf", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS),
 		expand("3_jasmine/{alignment_dir}/sniffles/2_iris_refined/{strain}_dupToIns_refined.vcf", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS),
 		expand("3_jasmine/{alignment_dir}/sniffles/3_normalized/{strain}_dupToIns_refined_normalizeTypes.vcf", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS),
@@ -43,7 +41,7 @@ rule picard_sort:
 	shell:
 	        "{params.picard_cmd} -I {input} -O {output.bamfile} -SORT_ORDER coordinate -VALIDATION_STRINGENCY LENIENT --CREATE_INDEX --MAX_RECORDS_IN_RAM {params.max_records}"
 
-# I can't seem to get the rename command to work with the picard sort rule. Might be a Slurm issue
+# Copy the index file for consistency
 rule copy_bam_index:
 	input:
 			"1_alignments/{alignment_dir}/{strain}/{strain}_picard_sorted.bai"
@@ -176,30 +174,6 @@ rule jasmine_mark_specific:
 			jasmine --mark_specific spec_reads={params.spec_reads} spec_len={params.spec_len} --preprocess_only file_list={params.file_list} out_file={output} genome_file={params.reference_genome} out_dir={params.out_dir}
 		"""
 
-rule jasmine_mark_specific_40x:
-	input:
-		"3_jasmine/{alignment_dir}/sniffles/3_normalized/{strain}_dupToIns_refined_normalizeTypes.vcf"
-	output:
-		"3_jasmine/{alignment_dir}/sniffles/4_specific/{strain}_dupToIns_refined_normalizeTypes_markedSpec.vcf"
-	wildcard_constraints:
-		alignment_dir = "ngmlr.subsampled_40X"
-	params:
-		reference_genome = REFERENCE,
-		out_dir="3_jasmine/{alignment_dir}/sniffles/4_specific/",
-		spec_len="100",
-		spec_reads="10",
-		file_list="3_jasmine/{alignment_dir}/sniffles/4_specific/{strain}_sniffles_vcf_file_refined.txt",
-	conda:  "yaml/jasmine.yaml"
-	threads: 1
-	resources:
-		mem_mb=lambda _, attempt: 1000 + ((attempt - 1) * 10000),
-		time_hms="00:05:00"
-	shell:
-		"""
-			echo {input} | tr " " "\n" > {params.file_list}
-			jasmine --mark_specific spec_len={params.spec_len} spec_reads=10 --preprocess_only file_list={params.file_list} out_file={output} genome_file={params.reference_genome} out_dir={params.out_dir}
-		"""
-
 # Remove duplicate calls in each sample
 rule jasmine_remove_duplicates:
 	input:
@@ -267,26 +241,6 @@ rule jasmine_ins_to_dup:
 			jasmine --dup_to_ins --postprocess_only out_file={output.not_genotyped} out_dir={params.out_dir}
 		"""
 
-# Check if Jasmine added the correct values for IS_SPECIFIC for the subsampled bams
-rule validate_is_specific_40x:
-	input:
-		"3_jasmine/{alignment_dir}/sniffles/7_ins_to_dup/{filename}"
-	output:
-		"3_jasmine/{alignment_dir}/sniffles/7_ins_to_dup/validated_is_specific/{filename}"
-	wildcard_constraints:
-		alignment_dir = "ngmlr.subsampled_40X"
-	log:
-		"logs/validate_is_specific/{alignment_dir}_{filename}.txt"
-	params:
-		min_support = 10,
-		min_len = 100
-	threads: 1
-	resources:
-		mem_mb=lambda _, attempt: 1000 + ((attempt - 1) * 10000),
-		time_hms="00:05:00"
-	script:
-		"scripts/1_process_results/check_jasmin_specific_calls.py"
-
 # Check if Jasmine added the correct values for IS_SPECIFIC for the full depth bams
 rule validate_is_specific:
 	input:
@@ -307,28 +261,6 @@ rule validate_is_specific:
 	script:
 		"scripts/1_process_results/check_jasmin_specific_calls.py"
 
-# Finalize merged dataset. Remove low confidence calls.
-rule jasmine_finalize_40x:
-	input:
-		genotyped="3_jasmine/{alignment_dir}/sniffles/7_ins_to_dup/validated_is_specific/merged_ins_to_dup_genotyped.vcf",
-		not_genotyped="3_jasmine/{alignment_dir}/sniffles/7_ins_to_dup/validated_is_specific/merged_ins_to_dup.vcf"
-	output:
-		genotyped="3_jasmine/{alignment_dir}/sniffles/8_final/merged_final_genotyped.vcf",
-		not_genotyped="3_jasmine/{alignment_dir}/sniffles/8_final/merged_final.vcf"
-	wildcard_constraints:
-		alignment_dir = "ngmlr.subsampled_40X"
-	params:
-		out_dir="3_jasmine/{alignment_dir}/sniffles/7_ins_to_dup/",
-	conda:  "yaml/jasmine.yaml"
-	threads: 1
-	resources:
-		mem_mb=lambda _, attempt: 1000 + ((attempt - 1) * 10000),
-		time_hms="00:05:00"
-	shell:
-		"""
-			cat {input.genotyped} | grep -v 'IMPRECISE;' | grep -v 'IS_SPECIFIC=0' > {output.genotyped}
-			cat {input.not_genotyped} | grep -v 'IMPRECISE;' | grep -v 'IS_SPECIFIC=0' > {output.not_genotyped}
-		"""
 
 # Finalize merged dataset. Remove low confidence calls.
 rule jasmine_finalize:
@@ -352,28 +284,6 @@ rule jasmine_finalize:
 			cat {input.genotyped} | grep -v 'IMPRECISE;' | grep -v 'IS_SPECIFIC=0' > {output.genotyped}
 			cat {input.not_genotyped} | grep -v 'IMPRECISE;' | grep -v 'IS_SPECIFIC=0' > {output.not_genotyped}
 		"""
-
-# Create different files for the Jasmine results for each variant type
-rule extract_svs_by_type_40x:
-	input:
-		unfiltered="3_jasmine/{alignment_dir}/sniffles/7_ins_to_dup/validated_is_specific/merged_ins_to_dup.vcf",
-		filtered="3_jasmine/{alignment_dir}/sniffles/8_final/merged_final.vcf"
-	output:
-		unfiltered=expand("3_jasmine/{alignment_dir}/sniffles/7_ins_to_dup/sv_types/{variant_type}.vcf", variant_type = ["DEL", "DUP", "INV"], allow_missing = True),
-		filtered=expand("3_jasmine/{alignment_dir}/sniffles/8_final/sv_types/{variant_type}.vcf", variant_type = ["DEL", "DUP", "INV"], allow_missing = True)
-	wildcard_constraints:
-		alignment_dir = "ngmlr.subsampled_40X"
-	log:
-		"logs/extract_svs_by_type/{alignment_dir}.txt"
-	params:
-		out_dir_unfiltered = "3_jasmine/{alignment_dir}/sniffles/7_ins_to_dup/sv_types/",
-		out_dir_filtered = "3_jasmine/{alignment_dir}/sniffles/8_final/sv_types/",
-	threads: 1
-	resources:
-		mem_mb=lambda _, attempt: 1000 + ((attempt - 1) * 10000),
-		time_hms="00:05:00"
-	script:
-		"scripts/1_process_results/extract_svs_by_type.py"
 
 # Create different files for the Jasmine results for each variant type
 rule extract_svs_by_type:
@@ -478,10 +388,3 @@ rule wormcat:
 			Rscript {output}
 		"""
 
-
-# WormCat
-# Don't use the WormCat results that are corrected for multiple comparisons using Bonferonni. Use a family-wise error rate approach.
-# https://cran.r-project.org/web/packages/cherry/index.html
-# See Multiple Testing of Gene Sets from Gene Ontology: Possibilities and Pitfalls
-
-# https://github.com/brentp/duphold

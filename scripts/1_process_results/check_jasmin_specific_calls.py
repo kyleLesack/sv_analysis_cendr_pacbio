@@ -2,16 +2,8 @@ import os
 import sys
 from collections import defaultdict
 from pathlib import Path
-#import argparse
-#parser = argparse.ArgumentParser()
-#parser.add_argument("input_vcf", help="input vcf to validate")
-#parser.add_argument("output_vcf", help="validated output vcf") # The original FASTQ was used to create shuffled FASTQ files
-#parser.add_argument("min_support", type=int, help="minimum variant read support")
-#parser.add_argument("min_len", type=int, help="minimum variant size in bp")
-#args = parser.parse_args()
 
 with open(snakemake.log[0], "w") as f:
-#with open("logs/validate_is_specific/ngmlr.txt ", "w") as f:
 	sys.stderr = sys.stdout = f
 
 	# Parse the vcf file lines to get the calls for each type
@@ -19,7 +11,6 @@ with open(snakemake.log[0], "w") as f:
 		vcf_header_lines = []
 		vcf_lines = []
 		bad_lines = []
-		#sv_dict = defaultdict(lambda: defaultdict(list)) # Store all variant coordinates in dictionary using filters and sv types as keys
 
 		for line in variants:
 			if line[0] == "#":
@@ -48,8 +39,6 @@ with open(snakemake.log[0], "w") as f:
 							if sv_len is not None:
 								if int(sv_len) >= min_len:
 									if is_specific != 1:
-										#print("Incorrect IS_SPECIFIC value for: ")
-										#print(line)
 										bad_lines.append(line)
 										fixed_line = line.replace("IS_SPECIFIC=0", "IS_SPECIFIC=1")
 										vcf_lines.append(fixed_line)
@@ -74,8 +63,7 @@ with open(snakemake.log[0], "w") as f:
 
 	# Write to disk
 	def write_vcf(vcf_lines, outdir, vcf_file):
-		# Check if output directories exist.
-		#outdir = os.path.dirname(outdir)
+
 		if not os.path.exists(outdir):
 			print("Creating directory: " + str(outdir))
 			os.makedirs(outdir)
@@ -87,9 +75,7 @@ with open(snakemake.log[0], "w") as f:
 
 	min_support = snakemake.params['min_support']
 	min_len = snakemake.params['min_len']
-	#min_support = args.min_support
-	#min_len = args.min_len
-	#with open(args.input_vcf) as f:
+
 	vcf_file_out = snakemake.output[0]
 	with open(snakemake.input[0]) as f:
 		vcf_lines = f.readlines()
@@ -97,11 +83,8 @@ with open(snakemake.log[0], "w") as f:
 		new_vcf_lines = variants_parsed[0]
 		fixed_vcf_lines = variants_parsed[1]
 
-		#vcf_file = args.output_vcf
 		outdir = Path(vcf_file_out)
 		outdir = outdir.parent.absolute()
 		write_vcf(new_vcf_lines, outdir, vcf_file_out)
 		bad_vcf_lines_file = vcf_file_out.replace(".vcf", ".bad.vcf")
 		write_vcf(fixed_vcf_lines, outdir, bad_vcf_lines_file)
-
-		#write_vcf(passed_vcf_lines, passed_dir, "passed.sorted.vcf")

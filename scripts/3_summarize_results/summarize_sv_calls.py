@@ -30,7 +30,6 @@ def parse_vcf(variants):
 
 			gene_annotation_start = line.find('WBGene')
 			gene_annotation = line[gene_annotation_start:]
-			#print(gene_annotation.rstrip())
 			gene_annotation_end = gene_annotation.find('|')
 			gene_annotation = gene_annotation[0:gene_annotation_end]
 

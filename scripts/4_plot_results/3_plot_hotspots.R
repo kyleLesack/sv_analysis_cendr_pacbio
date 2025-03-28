@@ -1,4 +1,3 @@
-setwd("/bulk/worm_lab/mrkyle/sv_analysis_cendr_pacbio")
 library(karyoploteR)
 library(BSgenome.Celegans.UCSC.ce11)
 library(regioneR)
@@ -7,7 +6,6 @@ dels_coords <- toGRanges("9_plots/sv_hotspots/ngmlr/sniffles/7_ins_to_dup/DEL.be
 dups_coords <- toGRanges("9_plots/sv_hotspots/ngmlr/sniffles/7_ins_to_dup/DUP.bed", genome="BSgenome.Celegans.UCSC.ce11" )
 dels_coords_40x <- toGRanges("9_plots/sv_hotspots/ngmlr.subsampled_40X/sniffles/7_ins_to_dup/DEL.bed", genome="BSgenome.Celegans.UCSC.ce11" )
 dups_coords_40x <- toGRanges("9_plots/sv_hotspots/ngmlr.subsampled_40X/sniffles/7_ins_to_dup/DUP.bed", genome="BSgenome.Celegans.UCSC.ce11" )
-#dd <- split(dd, f = dd$name)
 head(dels_coords)
 
 kp <- plotKaryotype(genome = "BSgenome.Celegans.UCSC.ce11", plot.type=2)

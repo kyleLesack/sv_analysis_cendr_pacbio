@@ -28,28 +28,12 @@ def parse_vcf(variants):
 					genes_affected_by_multiple_svs += 1
 				gene_set.add(gene_annotation)
 
-				#print(gene_annotation)
-				#print(line[0:s.find('.')])
 			else:
 				print("Found multiple gene annotations")
 
-			#line_split = line.split()
-			#info_line = line_split[7]
-			#info_line_split = info_line.split(";")
-			#variant_type = None
-
-			#for x in info_line_split: # Go though info field and find the VEP consequence annotations
-			#	if "CSQ=" in x:
-			#		csq_annotations = x.split("=")[1]
-			#		for annotation in csq_annotations:
-			#			print(annotation)
-			#			if "WBGene" in annotation:
-			#				print(annotation)
-
 	print("# of WormBase genes in VEP results: " + str(gene_count))
 	print("# of unique WormBase genes in VEP results: " + str(len(gene_set)))
-	#print(genes_affected_by_multiple_svs)
-	#print(len(gene_set) + genes_affected_by_multiple_svs)
+
 	return (gene_set)
 
 with open(args.input_vcf) as f:
@@ -57,5 +41,3 @@ with open(args.input_vcf) as f:
 	gene_set = parse_vcf(vcf_lines)
 
 write_genes(gene_set)
-
-	#write_vcf(passed_vcf_lines, passed_dir, "passed.sorted.vcf")

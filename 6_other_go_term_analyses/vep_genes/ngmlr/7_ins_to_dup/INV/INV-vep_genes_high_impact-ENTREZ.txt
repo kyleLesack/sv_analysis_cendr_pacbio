@@ -1,4 +1,0 @@
-name
-zip-9
-dyf-1
-mltn-11
