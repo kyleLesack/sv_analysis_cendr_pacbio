@@ -1,4 +1,6 @@
-# Software requirements
+# Software Requirements
+
+Note: The [yaml](./yaml/) directory includes conda yaml environment files. Most tools are available as Conda packages, which I recommend highly for replicating the pipeline. The required tools and the versions we used are listed below:
 
 ## Sequence Alignment and Structural Variant Calling
 
@@ -22,12 +24,14 @@ SV annotation was performed using the following tools:
 
 ## Snakemake pipeline
 
-A Snakemake pipeline was created to manage most the analysis. Most tools are available as Conda packages (specified in the yaml directory). Python and Linux shell scripts were also used to process the analysis results. 
+A Snakemake pipeline was created to manage most the analysis. Most tools are available as Conda packages (specified in the yaml directory). Python, R, and Linux shell scripts were used to process the analysis results. 
 
 
 # Input data
 
-The Snakemake pipeline expects the following FASTQ files:
+*C. elegans PacBio* sequencing data from the [*Caenorhabditis* Natural Diversity Resource](https://caendr.org/) project were used and are available from the Sequence Read Archive: [PacBio sequencing data](https://www.ncbi.nlm.nih.gov/bioproject?LinkName=sra_bioproject&from_uid=12908562) 
+
+The Snakemake pipeline expects the FASTQ files to be in the following locations:
 
 0_input/fastq/XZ1516_all_reads.fastq
 
@@ -58,6 +62,6 @@ The Snakemake pipeline expects the following FASTQ files:
 0_input/fastq/ECA36_all_reads.fastq
 
 
-# The Snakemake pipeline expects the C. elegans reference genome to be in the following location:
+# The Snakemake pipeline expects the *C. elegans* reference genome to be in the following location:
 
 0_input/reference/c_elegans.PRJNA13758.WS263.genomic.fa
