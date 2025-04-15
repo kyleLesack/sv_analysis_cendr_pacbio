@@ -6,7 +6,6 @@ MIN_SUPPORT_JASMINE = {"DL238": "42", "ECA36": "51", "ECA396": "33", "EG4725": "
 rule all:
 	input:
 		expand("1_alignments/{alignment_dir}/{strain}/{strain}_picard_sorted.{extension}", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS, extension=["bam","bam.bai"]),
-		expand("1_alignments/ngmlr.subsampled.picard_sorted/{strain}/{strain}_picard_sorted.bam", strain=ALL_STRAINS), 
 		expand("2_variant_calls/{alignment_dir}/sniffles/{strain}/{strain}.{extension}", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS, extension=["vcf", "vcf.gz"]),
 		expand("3_jasmine/{alignment_dir}/sniffles/1_dup_to_ins/{strain}_dupToIns.vcf", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS),
 		expand("3_jasmine/{alignment_dir}/sniffles/2_iris_refined/{strain}_dupToIns_refined.vcf", alignment_dir = ALIGNMENT_DIR, strain=ALL_STRAINS),
@@ -19,10 +18,6 @@ rule all:
 		expand("3_jasmine/{alignment_dir}/sniffles/7_ins_to_dup/validated_is_specific/{filename}", alignment_dir = ALIGNMENT_DIR, filename = ["merged_ins_to_dup.vcf", "merged_ins_to_dup_genotyped.vcf"]),
 		expand("3_jasmine/{alignment_dir}/sniffles/8_final/merged_final.vcf", alignment_dir = ALIGNMENT_DIR),
 		expand("3_jasmine/{alignment_dir}/sniffles/8_final/sv_types/{variant_type}.vcf", alignment_dir = ALIGNMENT_DIR, variant_type = ["DEL", "DUP", "INV"]),
-		expand("4_vep/scripts/{alignment_dir}/{input_dir}/{variant_type}-vep_per_gene-pick-no_intergenic.sh", alignment_dir = ALIGNMENT_DIR, input_dir = ["7_ins_to_dup", "8_final"], variant_type = ["DEL", "DUP", "INV"]),
-		expand("4_vep/scripts/{alignment_dir}/{input_dir}/annotated_high_impact/{variant_type}-vep_per_gene-pick-no_intergenic-annotated_high_impact.sh", alignment_dir = ALIGNMENT_DIR, input_dir = ["7_ins_to_dup", "8_final"], variant_type = ["DEL", "DUP", "INV"]),
-		#expand("5_wormcat/scripts/{alignment_dir}/{input_dir}/{variant_type}/{variant_type}-run_wormcat_on_vep_results.sh", alignment_dir = ALIGNMENT_DIR, input_dir = ["7_ins_to_dup", "8_final"], variant_type = ["DEL", "DUP", "INV"])
-		expand("5_wormcat/output/{alignment_dir}/{input_dir}/{variant_type}/{variant_type}-vep_genes_high_impact_wormcat.R", alignment_dir = ["ngmlr"], input_dir = ["7_ins_to_dup", "8_final"], variant_type = ["DEL", "DUP", "INV"])
 
 rule picard_sort:
 	input:
@@ -41,7 +36,7 @@ rule picard_sort:
 	shell:
 	        "{params.picard_cmd} -I {input} -O {output.bamfile} -SORT_ORDER coordinate -VALIDATION_STRINGENCY LENIENT --CREATE_INDEX --MAX_RECORDS_IN_RAM {params.max_records}"
 
-# Copy the index file for consistency
+# Copy the BAM index files to the expected file names
 rule copy_bam_index:
 	input:
 			"1_alignments/{alignment_dir}/{strain}/{strain}_picard_sorted.bai"
@@ -261,7 +256,6 @@ rule validate_is_specific:
 	script:
 		"scripts/1_process_results/check_jasmin_specific_calls.py"
 
-
 # Finalize merged dataset. Remove low confidence calls.
 rule jasmine_finalize:
 	input:
@@ -308,83 +302,4 @@ rule extract_svs_by_type:
 		"scripts/1_process_results/extract_svs_by_type.py"
 
 
-# Create scripts for annotating variants with VEP, as Docker doesn't play nice with Snakemake
-rule vep_annotate:
-	input:
-		"3_jasmine/{alignment_dir}/sniffles/{input_dir}/sv_types/{variant_type}.vcf"
-	output:
-		"4_vep/scripts/{alignment_dir}/{input_dir}/{variant_type}-vep_per_gene-pick-no_intergenic.sh"
-	threads: 1
-	resources:
-		mem_mb=lambda _, attempt: 1000 + ((attempt - 1) * 10000),
-		time_hms="00:20:00"
-	shell:
-		"""
-			echo mkdir -p ./4_vep/input/{wildcards.alignment_dir}/{wildcards.input_dir}/ > {output}
-			echo mkdir -p ./4_vep/output/{wildcards.alignment_dir}/{wildcards.input_dir}/ >> {output}
-			echo cp {input} ./4_vep/input/{wildcards.alignment_dir}/{wildcards.input_dir}/ >> {output}
-			echo chmod -R a+rwx ./4_vep >> {output}
-			echo docker run -v /bulk/worm_lab/mrkyle/sv_analysis_cendr_pacbio/4_vep:/data ensemblorg/ensembl-vep \
-			  vep --cache --offline --format vcf --vcf --force_overwrite \
-			      --input_file input/{wildcards.alignment_dir}/{wildcards.input_dir}/{wildcards.variant_type}.vcf \
-			      --output_file output/{wildcards.alignment_dir}/{wildcards.input_dir}/{wildcards.variant_type}-vep_per_gene-pick-no_intergenic.vcf \
-			      --species caenorhabditis_elegans \
-			      --per_gene \
-			      --pick \
-			      --no_intergenic >> {output}
-		"""
-
-# Create scripts to process VEP results by removing VCF lines without annotations
-rule filter_vep_annotated_high_impact:
-	input:
-		"4_vep/scripts/{alignment_dir}/{input_dir}/{variant_type}-vep_per_gene-pick-no_intergenic.sh"
-	output:
-		"4_vep/scripts/{alignment_dir}/{input_dir}/annotated_high_impact/{variant_type}-vep_per_gene-pick-no_intergenic-annotated_high_impact.sh"
-	params:
-		tempdir = "4_vep/output/{alignment_dir}/{input_dir}/{variant_type}_temp",
-		docker_tempdir = "output/{alignment_dir}/{input_dir}/{variant_type}_temp",
-		grep_cmd = r"""grep "#" """,
-		grep_invert_cmd = r"""grep -v "#" """,
-		impact_setting = r"""filter "IMPACT is HIGH" """
-	threads: 1
-	resources:
-		mem_mb=lambda _, attempt: 1000 + ((attempt - 1) * 10000),
-		time_hms="00:20:00"
-	shell:
-		"""
-			echo mkdir -p {params.tempdir} > {output}
-			echo {params.grep_cmd:q} 4_vep/output/{wildcards.alignment_dir}/{wildcards.input_dir}/{wildcards.variant_type}-vep_per_gene-pick-no_intergenic.vcf \> {params.tempdir}/{wildcards.variant_type}-vep_vep_per_gene-pick-no_intergenic_annotated_only.vcf >> {output}
-			echo {params.grep_invert_cmd:q} 4_vep/output/{wildcards.alignment_dir}/{wildcards.input_dir}/{wildcards.variant_type}-vep_per_gene-pick-no_intergenic.vcf \| grep "CSQ" \>\> {params.tempdir}/{wildcards.variant_type}-vep_vep_per_gene-pick-no_intergenic_annotated_only.vcf >> {output}
-			echo mkdir -p ./4_vep/output/{wildcards.alignment_dir}/{wildcards.input_dir}/annotated_high_impact/ >> {output}
-			echo chmod -R a+rwx ./4_vep >> {output}
-			echo docker run -v /bulk/worm_lab/mrkyle/sv_analysis_cendr_pacbio/4_vep:/data ensemblorg/ensembl-vep \
-			  filter_vep --format vcf --vcf --force_overwrite \
-			      --input_file {params.docker_tempdir}/{wildcards.variant_type}-vep_vep_per_gene-pick-no_intergenic_annotated_only.vcf \
-			      --output_file output/{wildcards.alignment_dir}/{wildcards.input_dir}/annotated_high_impact/{wildcards.variant_type}-vep_per_gene-pick-no_intergenic-annotated_high_impact.vcf \
-			      --vcf_info_field CSQ \
-			      --{params.impact_setting:q} >> {output}
-  		  	echo rm -rf {params.tempdir} >> {output}
-		"""
-
-# Create scripts to run WormCat on VEP results
-rule wormcat:
-	input:
-		"4_vep/scripts/{alignment_dir}/{input_dir}/annotated_high_impact/{variant_type}-vep_per_gene-pick-no_intergenic-annotated_high_impact.sh"
-	output:
-		"5_wormcat/output/{alignment_dir}/{input_dir}/{variant_type}/{variant_type}-vep_genes_high_impact_wormcat.R"
-	params:
-		vep_results = "4_vep/output/{alignment_dir}/{input_dir}/annotated_high_impact/{variant_type}-vep_per_gene-pick-no_intergenic-annotated_high_impact.vcf",
-		vep_genes_high_impact = "5_wormcat\/output\/{alignment_dir}\/{input_dir}\/{variant_type}\/{variant_type}-vep_genes_high_impact.txt",
-		outdir = "5_wormcat\/output\/{alignment_dir}\/{input_dir}\/{variant_type}\/wormcat_results"
-		#wormcat_results= "5_wormcat/output/{alignment_dir}/{input_dir}/{variant_type}/{variant_type}-wormcat_results.txt"
-	threads: 1
-	resources:
-		mem_mb=lambda _, attempt: 1000 + ((attempt - 1) * 10000),
-		time_hms="00:20:00"
-	shell:
-		"""
-			python3 scripts/1_process_results/extract_genes_from_vep.py {params.vep_results} {params.vep_genes_high_impact}
-			sed 's/VEP_GENES_FILE/{params.vep_genes_high_impact}/g' scripts/2_wormcat/wormcat_r_cmds.R | sed 's/VARIANT_TYPE/{wildcards.variant_type}/g' | sed 's/OUTDIR/{params.outdir}/g' > {output}
-			Rscript {output}
-		"""
 
