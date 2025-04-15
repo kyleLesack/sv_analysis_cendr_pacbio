@@ -1,6 +1,0 @@
-library(tidyverse)
-library(ggmap)
-library(sf)
-library(mapview)
-strains <- read.delim(file = '7_strain_map/strains_coordinates.csv', sep = ',',stringsAsFactors= TRUE, header = TRUE)
-locations <- as_tibble(strains)
