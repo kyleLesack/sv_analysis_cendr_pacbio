@@ -18,6 +18,7 @@ The analysis of *Caenorhabditis elegans* structural variants (SVs) was performed
 SV annotation was performed using the following tools:
 
 * Variant Effect Predictor (v.109.3)
+	* To narrow down the SVs to those that were most likely to have significant phenotypic consequences, the VEP filter parameter was set to "IMPACT is HIGH".
 * easyGSEA tool from eVITTA (v1.3.1) 
 	* Overrepresented genes were annotated using the annotated gene sets from WormCat (V2)
 
@@ -65,9 +66,4 @@ The Snakemake pipeline expects the FASTQ files to be in the following locations:
 ## The Snakemake pipeline expects the *C. elegans* reference genome to be in the following location:
 
 0_input/reference/c_elegans.PRJNA13758.WS263.genomic.fa
-
-# SV annotation
-
-VEP was used to predict the functional consequences of each SV. To narrow down the SVs to those that were most likely to have significant phenotypic consequences, the VEP filter parameter was set to "IMPACT is HIGH". Functional profiling on the high impact SVs was then performed using WormCat (v2) with the whole_genome_v2_nov-11-2021.csv annotation file. 
-
 
