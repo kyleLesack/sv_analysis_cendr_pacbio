@@ -24,7 +24,7 @@ SV annotation was performed using the following tools:
 
 ## Snakemake pipeline
 
-A Snakemake pipeline was created to manage most the analysis. Most tools are available as Conda packages (specified in the yaml directory). Python, R, and Linux shell scripts were used to process the analysis results. 
+A Snakemake pipeline was created to manage the SV calling part of the analysis. Most tools are available as Conda packages (specified in the yaml directory). Python, and Linux shell scripts were used to process the analysis results. This produces a finalized merged dataset with high confidence SV calls. These VCF files should be available in the 3_jasmine/ngmlr/sniffles/8_final/sv_types/ directory if the pipeline ran correctly.
 
 
 # Input data
@@ -62,6 +62,12 @@ The Snakemake pipeline expects the FASTQ files to be in the following locations:
 0_input/fastq/ECA36_all_reads.fastq
 
 
-# The Snakemake pipeline expects the *C. elegans* reference genome to be in the following location:
+## The Snakemake pipeline expects the *C. elegans* reference genome to be in the following location:
 
 0_input/reference/c_elegans.PRJNA13758.WS263.genomic.fa
+
+# SV annotation
+
+VEP was used to predict the functional consequences of each SV. To narrow down the SVs to those that were most likely to have significant phenotypic consequences, the VEP filter parameter was set to "IMPACT is HIGH". Functional profiling on the high impact SVs was then performed using WormCat (v2) with the whole_genome_v2_nov-11-2021.csv annotation file. 
+
+
