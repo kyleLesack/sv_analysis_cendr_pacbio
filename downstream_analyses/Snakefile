@@ -1,0 +1,482 @@
+ALL_STRAINS = ['DL238', 'ECA36', 'ECA396', 'EG4725', 'JU1400', 'JU2526', 'JU2600', 'JU310', 'MY2147', 'MY2693', 'NIC2', 'NIC526', 'QX1794', 'XZ1516']
+TRANSPOSON_STRAINS = ['DL238', 'ECA36', 'EG4725', 'JU1400', 'JU2526', 'JU310', 'NIC2', 'QX1794']
+SVTYPES = ['DEL', 'DUP', 'INV']
+VEP_IMPACT_TYPES = ["HIGH", "MODERATE", "LOW", "MODIFIER"]
+GENE_CATEGORIES = ["protein_coding_genes", "ncRNA_genes", "pseudogenes"]
+GENE_FAMILIES = ["clec", "cyp", "fbox", "gpcrs", "gst", "nhr", "ugt"]
+
+# snakemake --use-conda -n --cores 1 # Dry run
+# snakemake -n all --delete-all-output # Delete files created by Snakemake
+# snakemake -p -n --use-conda --cores 1 # Show the commands it will run. Useful to troubleshoot shell commands
+
+rule all:
+	input:
+		"0_input_data/reference/c_elegans.WBcel235.all_genes.bed",
+		expand("0_input_data/reference/gene_types/{genetype}.txt", genetype = ["protein_coding_genes", "pseudogenes", "ncRNA_genes"]),
+		expand("1_vcfs_beds_filtered/{svtype}-no_homozygous_reference.{extension}", svtype = SVTYPES, extension=["vcf", "bed"]),
+		expand("1_vcfs_beds_filtered/per_strain/{strain}_{svtype}-no_homozygous_reference.bed", strain = ALL_STRAINS, svtype = SVTYPES),
+		"2_basic_sv_stats/sv_size_summary.csv",
+		expand("2_basic_sv_stats/overlapping_svs_same_strain/{strain}_{comparison}_overlap.bed", strain = ALL_STRAINS, comparison = ["del_dup", "del_inv", "dup_inv"]),
+		expand("2_basic_sv_stats/overlapped_genes/{svtype}_{genecategory}.bed", svtype = SVTYPES, genecategory = GENE_CATEGORIES), 
+		expand("2_basic_sv_stats/svs_overlapping_multiple_genes/{svtype}_{genecategory}.bed", svtype = SVTYPES, genecategory = GENE_CATEGORIES),
+		expand("2_basic_sv_stats/singletons/{svtype}_{suffix}", svtype = SVTYPES, suffix=["singletons.csv", "all_strains.txt"]),
+		expand("2_basic_sv_stats/allele_frequencies/{svtype}_allele_frequencies.csv", svtype = SVTYPES),
+		expand("3_sv_distribution_by_region/transposons/{strain}_transposons.bed", strain = TRANSPOSON_STRAINS),
+		expand("3_sv_distribution_by_region/transposons/overlap/{strain}_{svtype}.txt", strain = TRANSPOSON_STRAINS, svtype = SVTYPES),
+		expand("3_sv_distribution_by_region/chr_arms_centers/{svtype}_chr_arms_centers.{extension}", svtype = SVTYPES, extension=["bed", "txt"]),
+		"3_sv_distribution_by_region/chr_arms_centers/SV_table_chr_arms_centers.csv",
+		expand("3_sv_distribution_by_region/chr_domains/{svtype}_chr_domains.{extension}", svtype = SVTYPES, extension=["bed", "txt"]),
+		"3_sv_distribution_by_region/chr_domains/SV_table_chr_domains.csv",
+		expand("0_input_data/reference/hyperdivergent/{strain}_hyperdivergent.bed", strain = ALL_STRAINS),
+		expand("3_sv_distribution_by_region/hyperdivergent/{strain}_{svtype}-hyperdivergent.{extension}", strain = ALL_STRAINS, svtype = SVTYPES, extension=["bed", "counts"]),
+		expand("3_sv_distribution_by_region/hyperdivergent/ALL_STRAINS_{svtype}-hyperdivergent.{extension}", svtype = SVTYPES, extension=["bed", "counts"]),
+		expand("3_sv_distribution_by_region/hyperdivergent/sv_sizes/ALL_STRAINS_{svtype}-{region}_sizes.txt", svtype = SVTYPES, region=["hyperdivergent", "nonhyperdivergent"]),
+		"3_sv_distribution_by_region/hyperdivergent/sv_sizes/ALL_STRAINS_sizes.csv",
+		expand("4_vep/{svtype}-vep.vcf", svtype = SVTYPES),
+		expand("4_vep/high_impact_svs/{svtype}-high_impact_svs.txt", svtype = SVTYPES),
+		expand("4_vep/genes_of_interest/{svtype}.tsv", svtype = ["DEL", "DUP"]),
+		expand("4_vep/genes_of_interest/{svtype}.entrez.tsv", svtype = ["DEL", "DUP"]),
+		expand("4_vep/genes_of_interest/{svtype}_overlap_prop.tsv", svtype = ["DEL", "DUP"]),
+		expand("4_vep/gene_families/{svtype}-{family}.txt", svtype = ["DEL", "DUP"], family =  GENE_FAMILIES),
+		expand("4_vep/gene_families/ALLSVS-{family}.txt", family = GENE_FAMILIES),
+		expand("4_vep/predicted_consequences/{svtype}-impact_consequence_summary.csv", svtype = SVTYPES),
+		expand("5_wormcat_ora/gene_families/{family}/summary.txt", family = GENE_FAMILIES),
+		expand("5_wormcat_ora/plots/wormcat_c1-c3.{extension}", extension = ["png", "eps"])
+		
+		
+# Get list of protein coding, ncRNA, and pseudogenes from gff3 file
+rule get_gene_types:
+	input:
+		"0_input_data/reference/Caenorhabditis_elegans.WBcel235.61.gff3"
+	output:
+		"0_input_data/reference/gene_types/{genetype}.txt"
+	params:
+		ofs_delim=r'"\t"',
+		reference="0_input_data/reference/Caenorhabditis_elegans.WBcel235.61.gff3"
+	shell:
+		"""
+			awk 'BEGIN {{OFS = {params.ofs_delim}}};$3=="gene"{{print $1,$4-1,$5,$9}}' {params.reference} | cut -d ":" -f 2 | cut -d ";" -f 1 | sort > 0_input_data/reference/gene_types/protein_coding_genes.txt
+			awk 'BEGIN {{OFS = {params.ofs_delim}}};$3=="ncRNA_gene"{{print $1,$4-1,$5,$9}}' {params.reference} | cut -d ":" -f 2 | cut -d ";" -f 1 | sort > 0_input_data/reference/gene_types/ncRNA_genes.txt
+			awk 'BEGIN {{OFS = {params.ofs_delim}}};$3=="pseudogene"{{print $1,$4-1,$5,$9}}' {params.reference} | grep "biotype=pseudogene" | cut -d ":" -f 2 | cut -d ";" -f 1 | sort > 0_input_data/reference/gene_types/pseudogenes.txt
+		"""
+
+# Create BED files that only contain single types of genes
+rule create_c_elegans_gene_bedfile:
+	input:
+		"0_input_data/reference/Caenorhabditis_elegans.WBcel235.61.gff3"
+	output:
+		ncRNA="0_input_data/reference/c_elegans.WBcel235.ncRNA_genes.bed",
+		protein="0_input_data/reference/c_elegans.WBcel235.protein_coding_genes.bed",
+		pseudogene="0_input_data/reference/c_elegans.WBcel235.pseudogenes.bed",
+		all_genes="0_input_data/reference/c_elegans.WBcel235.all_genes.bed"
+	params:
+		ofs_delim=r'"\t"'
+	shell:
+		"""
+			awk 'BEGIN {{OFS = {params.ofs_delim}}};$3=="gene"{{print $1,$4-1,$5,$9}}' {input} | grep "biotype=protein" | cut -d ";" -f 1 | sed -e 's/ID=gene://g' > {output.protein}
+			awk 'BEGIN {{OFS = {params.ofs_delim}}};$3=="ncRNA_gene"{{print $1,$4-1,$5,$9}}' {input} | cut -d ";" -f 1 | sed -e 's/ID=gene://g' > {output.ncRNA}
+			awk 'BEGIN {{OFS = {params.ofs_delim}}};$3=="pseudogene"{{print $1,$4-1,$5,$9}}' {input} | cut -d ";" -f 1 | sed -e 's/ID=gene://g' > {output.pseudogene}
+			cat {output.ncRNA} {output.protein} {output.pseudogene} | sort -k1,1 -k2,2n > {output.all_genes}
+		"""
+
+# Remove SV calls that are only present in strains genotyped as being homozygous for the reference allele
+rule filter_homozygous_reference:
+	input:
+		"0_input_data/vcfs/{svtype}.vcf"
+	output:
+		"1_vcfs_beds_filtered/{svtype}-no_homozygous_reference.vcf"
+	params:
+		bad_sv_call="7_0_Sniffles2.INV.859ES1" # Has a homozygous reference call and another that is genotyped as ./. but still included as true call
+	script:
+		"scripts/filter_homozygous_reference.py"
+
+# Convert filtered VCF files to BED format		
+rule convertvcf2bed:
+	input:
+			"1_vcfs_beds_filtered/{svtype}-no_homozygous_reference.vcf"
+	output:
+	        "1_vcfs_beds_filtered/{svtype}-no_homozygous_reference.bed"
+	script:
+		"scripts/convert_vcf_to_bed.py"
+
+# Create BED per strain
+rule create_bed_per_strain:
+	input:
+			"1_vcfs_beds_filtered/{svtype}-no_homozygous_reference.vcf"
+	output:
+		expand("1_vcfs_beds_filtered/per_strain/{strain}_{svtype}-no_homozygous_reference.bed", strain = ALL_STRAINS, allow_missing = True)
+	conda:  "yaml/biopython.yaml"
+	script:
+		"scripts/create_bed_per_strain.py"
+		
+# Summarize basic SV statistics
+rule summarize_sv_sizes:
+	input:
+		expand("1_vcfs_beds_filtered/{svtype}-no_homozygous_reference.vcf", svtype = SVTYPES)
+	output:
+		"2_basic_sv_stats/sv_size_summary.csv"
+	script:
+		"scripts/get_size_stats.py"
+
+# Get SVs of different types that overlap in same strain
+rule get_overlapping_svs_same_strain:
+	input:
+		deletion_bed="1_vcfs_beds_filtered/per_strain/{strain}_DEL-no_homozygous_reference.bed",
+		duplication_bed="1_vcfs_beds_filtered/per_strain/{strain}_DUP-no_homozygous_reference.bed",
+		inversion_bed="1_vcfs_beds_filtered/per_strain/{strain}_INV-no_homozygous_reference.bed"
+	output:
+		del_dup_overlap="2_basic_sv_stats/overlapping_svs_same_strain/{strain}_del_dup_overlap.bed",
+		del_inv_overlap="2_basic_sv_stats/overlapping_svs_same_strain/{strain}_del_inv_overlap.bed",
+		dup_inv_overlap="2_basic_sv_stats/overlapping_svs_same_strain/{strain}_dup_inv_overlap.bed"
+	conda:  "yaml/bedtools.yaml"
+	shell:
+		"""
+			bedtools intersect -wo -a {input.deletion_bed} -b {input.duplication_bed} | sort -k1,1 -k2,2n | cut -f 1-4,6-9 > {output.del_dup_overlap}
+			bedtools intersect -wo -a {input.deletion_bed} -b {input.inversion_bed} | sort -k1,1 -k2,2n | cut -f 1-4,6-9 > {output.del_inv_overlap}
+			bedtools intersect -wo -a {input.duplication_bed} -b {input.inversion_bed} | sort -k1,1 -k2,2n | cut -f 1-4,6-9 > {output.dup_inv_overlap}
+		"""
+
+# Get genes that are overlapped by SVs
+rule get_overlapped_protein_coding_genes:
+	input:
+		vcffile="1_vcfs_beds_filtered/{svtype}-no_homozygous_reference.bed",
+		reference="0_input_data/reference/c_elegans.WBcel235.protein_coding_genes.bed"
+	output:
+		"2_basic_sv_stats/overlapped_genes/{svtype}_protein_coding_genes.bed"
+	conda:  "yaml/bedtools.yaml"
+	shell:
+		"""
+			bedtools intersect -wo -a {input.reference} -b {input.vcffile} > {output}
+		"""
+
+# Get genes that are overlapped by SVs
+rule get_overlapped_ncRNA_genes:
+	input:
+		vcffile="1_vcfs_beds_filtered/{svtype}-no_homozygous_reference.bed",
+		reference="0_input_data/reference/c_elegans.WBcel235.ncRNA_genes.bed"
+	output:
+		"2_basic_sv_stats/overlapped_genes/{svtype}_ncRNA_genes.bed"
+	conda:  "yaml/bedtools.yaml"
+	shell:
+		"""
+			bedtools intersect -wo -a {input.reference} -b {input.vcffile} > {output}
+		"""
+
+# Get genes that are overlapped by SVs
+rule get_overlapped_pseudogenes:
+	input:
+		vcffile="1_vcfs_beds_filtered/{svtype}-no_homozygous_reference.bed",
+		reference="0_input_data/reference/c_elegans.WBcel235.pseudogenes.bed"
+	output:
+		"2_basic_sv_stats/overlapped_genes/{svtype}_pseudogenes.bed"
+	conda:  "yaml/bedtools.yaml"
+	shell:
+		"""
+			bedtools intersect -wo -a {input.reference} -b {input.vcffile} > {output}
+		"""
+
+# Get SVs that span multiple genes
+rule get_svs_spanning_multiple_genes:
+	input:
+		"2_basic_sv_stats/overlapped_genes/{svtype}_{genecategory}.bed"
+	wildcard_constraints:
+		svtype= '|'.join([re.escape(x) for x in SVTYPES])
+	output:
+		"2_basic_sv_stats/svs_overlapping_multiple_genes/{svtype}_{genecategory}.bed"
+	script:
+		"scripts/get_svs_spanning_multiple_genes.py"
+
+
+# Get transposons per strain
+rule get_strain_transposons:
+	input:
+		"0_input_data/reference/20231213_c_elegans_transposon_calls.bed"
+	output:
+		"3_sv_distribution_by_region/transposons/{strain}_transposons.bed"
+	params:
+		strain="{strain}"
+	conda:  "yaml/biopython.yaml"
+	script:
+		"scripts/process_cendr_transposons.py"
+
+# Get overlap between SVs and transposons
+rule get_transposon_overlap:
+	input:
+			"1_vcfs_beds_filtered/per_strain/{strain}_{svtype}-no_homozygous_reference.bed",
+			"3_sv_distribution_by_region/transposons/{strain}_transposons.bed"
+	output:
+			"3_sv_distribution_by_region/transposons/overlap/{strain}_{svtype}.txt"
+	conda:  "yaml/bedtools.yaml"
+	shell:
+		"""
+			bedtools intersect -wa -wb -a 3_sv_distribution_by_region/transposons/{wildcards.strain}_transposons.bed -b 1_vcfs_beds_filtered/per_strain/{wildcards.strain}_{wildcards.svtype}-no_homozygous_reference.bed | sort -k1,1 -k2,2n > 3_sv_distribution_by_region/transposons/overlap/{wildcards.strain}_{wildcards.svtype}.txt
+		"""
+
+# Get distribution of SVs among chromosome arms and centers
+rule get_distribution_arms_centers:
+	input:
+		coordinates="0_input_data/reference/chr_arms_centers.bed",
+		bed="1_vcfs_beds_filtered/{svtype}-no_homozygous_reference.bed"
+	output:
+		bed="3_sv_distribution_by_region/chr_arms_centers/{svtype}_chr_arms_centers.bed",
+		txt="3_sv_distribution_by_region/chr_arms_centers/{svtype}_chr_arms_centers.txt"
+	conda:  "yaml/bedtools.yaml"
+	shell:
+		"""
+			bedtools intersect -wa -wb -a  {input.coordinates} -b {input.bed} | sort -k1,1 -k2,2n > {output.bed}
+			bedtools intersect -C -a {input.coordinates} -b {input.bed} > {output.txt}
+
+		"""
+
+# Summarize the distribution of SVs in the arms in a table
+rule summarize_arms_centers_table:
+	input:
+		deletion_distribution="3_sv_distribution_by_region/chr_arms_centers/DEL_chr_arms_centers.txt",
+		duplication_distribution="3_sv_distribution_by_region/chr_arms_centers/DUP_chr_arms_centers.txt",
+		inversion_distribution="3_sv_distribution_by_region/chr_arms_centers/INV_chr_arms_centers.txt"
+	output:
+		"3_sv_distribution_by_region/chr_arms_centers/SV_table_chr_arms_centers.csv"
+	conda:  "yaml/r_packages.yaml"		
+	script:
+		"scripts/summarize_arm_center_table.R"
+
+
+# Get distribution of SVs among chromosome domains
+rule get_distribution_chr_domains:
+	input:
+		coordinates="0_input_data/reference/chr_domains_converted2bp.bed",
+		bed="1_vcfs_beds_filtered/{svtype}-no_homozygous_reference.bed"
+	output:
+		bed="3_sv_distribution_by_region/chr_domains/{svtype}_chr_domains.bed",
+		txt="3_sv_distribution_by_region/chr_domains/{svtype}_chr_domains.txt"
+	conda:  "yaml/bedtools.yaml"
+	shell:
+		"""
+			bedtools intersect -wa -wb -a  {input.coordinates} -b {input.bed} | sort -k1,1 -k2,2n > {output.bed}
+			bedtools intersect -C -a {input.coordinates} -b {input.bed} > {output.txt}
+		"""
+
+# Summarize the distribution of SVs in the chr domains in a table
+rule summarize_domains_table:
+	input:
+		deletion_distribution="3_sv_distribution_by_region/chr_domains/DEL_chr_domains.txt",
+		duplication_distribution="3_sv_distribution_by_region/chr_domains/DUP_chr_domains.txt",
+		inversion_distribution="3_sv_distribution_by_region/chr_domains/INV_chr_domains.txt",
+	output:
+		"3_sv_distribution_by_region/chr_domains/SV_table_chr_domains.csv"
+	conda:  "yaml/r_packages.yaml"		
+	script:
+		"scripts/summarize_chr_domain_table.R"
+
+# Get hyperdivergent regions per strain
+rule gene_hyperdivergent_regions_per_strain:
+	input:
+		"0_input_data/reference/20250625_c_elegans_divergent_regions_strain.bed"
+	output:
+		"0_input_data/reference/hyperdivergent/{strain}_hyperdivergent.bed"
+	shell:
+		"""
+			grep -w {wildcards.strain} {input} > {output}
+		"""
+
+# Find SVs that overlap with hyperdivergent regions		
+rule get_distribution_hyperdivergent:
+	input:
+		coordinates="0_input_data/reference/hyperdivergent/{strain}_hyperdivergent.bed",
+		bedfile="1_vcfs_beds_filtered/per_strain/{strain}_{svtype}-no_homozygous_reference.bed"
+	output:
+		bedfile="3_sv_distribution_by_region/hyperdivergent/{strain}_{svtype}-hyperdivergent.bed",
+		count_per_region="3_sv_distribution_by_region/hyperdivergent/{strain}_{svtype}-hyperdivergent.counts"
+	params:
+		ofs_delim=r'"\t"'		
+	conda:  "yaml/bedtools.yaml"
+	shell:
+		"""
+			bedtools intersect -wb -a {input.coordinates} -b {input.bedfile} | sort -k1,1 -k2,2n | cut -f 1-4,8 | awk 'BEGIN {{OFS = {params.ofs_delim}}}{{print $1,$2,$3,$5,$4}}' > {output.bedfile}
+			bedtools intersect -C -a {input.coordinates}  -b {input.bedfile} > {output.count_per_region}
+		"""
+		
+# Combine hyperdivergent overlap results from all strains into single file for each SV type
+rule combine_hyperdivergent:
+	input:
+		bedfiles=expand("3_sv_distribution_by_region/hyperdivergent/{strain}_{svtype}-hyperdivergent.bed", strain = ALL_STRAINS, allow_missing = True),
+		countfiles=expand("3_sv_distribution_by_region/hyperdivergent/{strain}_{svtype}-hyperdivergent.counts", strain = ALL_STRAINS, allow_missing = True)
+	output:
+		bedfile="3_sv_distribution_by_region/hyperdivergent/ALL_STRAINS_{svtype}-hyperdivergent.bed",
+		countfile="3_sv_distribution_by_region/hyperdivergent/ALL_STRAINS_{svtype}-hyperdivergent.counts"
+	shell:
+		"""
+			cat {input.bedfiles} > {output.bedfile}
+			cat {input.countfiles} > {output.countfile}
+		"""
+
+# Get the sizes of SVs inside and outside of hyperdivergent regions
+# Validated with: comm -12 <(sort 3_sv_distribution_by_region/hyperdivergent/sv_sizes/ALL_STRAINS_DEL-hyperdivergent_sizes.txt) <(sort 3_sv_distribution_by_region/hyperdivergent/sv_sizes/ALL_STRAINS_DEL-nonhyperdivergent_sizes.txt)
+rule get_hyperdivergent_sizes:
+	input:
+		bedfile="3_sv_distribution_by_region/hyperdivergent/ALL_STRAINS_{svtype}-hyperdivergent.bed",
+		vcffile="1_vcfs_beds_filtered/{svtype}-no_homozygous_reference.vcf"
+	output:
+		hyperfile="3_sv_distribution_by_region/hyperdivergent/sv_sizes/ALL_STRAINS_{svtype}-hyperdivergent_sizes.txt",
+		nonhyperfile="3_sv_distribution_by_region/hyperdivergent/sv_sizes/ALL_STRAINS_{svtype}-nonhyperdivergent_sizes.txt"
+	script:
+		"scripts/get_sv_sizes_hyperdivergent.py" 
+
+# Summarize hyperdivergent and nonhyperdivergent sizes in table
+rule summarize_sizes_hyper_and_nonhyper:	
+	input:
+		deletion_sizes_hyper="3_sv_distribution_by_region/hyperdivergent/sv_sizes/ALL_STRAINS_DEL-hyperdivergent_sizes.txt",
+		deletion_sizes_non_hyper="3_sv_distribution_by_region/hyperdivergent/sv_sizes/ALL_STRAINS_DEL-nonhyperdivergent_sizes.txt",
+		duplication_sizes_hyper="3_sv_distribution_by_region/hyperdivergent/sv_sizes/ALL_STRAINS_DUP-hyperdivergent_sizes.txt",
+		duplication_sizes_non_hyper="3_sv_distribution_by_region/hyperdivergent/sv_sizes/ALL_STRAINS_DUP-nonhyperdivergent_sizes.txt",
+		inversion_sizes_hyper="3_sv_distribution_by_region/hyperdivergent/sv_sizes/ALL_STRAINS_INV-hyperdivergent_sizes.txt",
+		inversion_sizes_non_hyper="3_sv_distribution_by_region/hyperdivergent/sv_sizes/ALL_STRAINS_INV-nonhyperdivergent_sizes.txt",		
+	output:
+		"3_sv_distribution_by_region/hyperdivergent/sv_sizes/ALL_STRAINS_sizes.csv"
+	conda:  "yaml/r_packages.yaml"		
+	script:
+		"scripts/compare_sizes_hyper_non_hyper.R"
+
+# Singletons proportions per strain
+rule get_singleton_proportion_per_strain:
+	input:
+		"1_vcfs_beds_filtered/{svtype}-no_homozygous_reference.vcf"
+	output:
+		csvfile="2_basic_sv_stats/singletons/{svtype}_singletons.csv",
+		textfile="2_basic_sv_stats/singletons/{svtype}_all_strains.txt",
+	script:
+		"scripts/get_singleton_proportion_per_strain.py"
+
+# Get the SV allele frequencies
+rule get_allele_frequencies:
+	input:
+		"1_vcfs_beds_filtered/{svtype}-no_homozygous_reference.vcf"
+	output:
+		"2_basic_sv_stats/allele_frequencies/{svtype}_allele_frequencies.csv",		
+	script:	
+		"scripts/get_strain_counts_per_sv.py"
+
+# Run VEP to get consequences 		
+rule run_vep:
+	input:
+		"1_vcfs_beds_filtered/{svtype}-no_homozygous_reference.vcf"
+	output:
+		"4_vep/{svtype}-vep.vcf"
+	conda:  "yaml/vep.yaml"
+	shell:
+		"""
+			vep --cache --format vcf --input_file {input} --output_file {output} --species caenorhabditis_elegans --vcf
+		"""
+
+# Get names of high impact SVs
+rule get_high_impact_svs:
+	input:
+		"4_vep/{svtype}-vep.vcf"
+	output:
+		"4_vep/high_impact_svs/{svtype}-high_impact_svs.txt",
+	script:
+		"scripts/get_high_impact_svs.py"
+
+# Summarize predicted consequences
+rule summarize_vep_consequences:
+	input:
+		vcffile="4_vep/{svtype}-vep.vcf",
+		referencefile="0_input_data/reference/vep_consequences_impact.tsv"
+	output:
+		"4_vep/predicted_consequences/{svtype}-impact_consequence_summary.csv"
+	script:
+		"scripts/get_sv_impact_consequence_counts.py"
+
+# Get genes affected by impact types
+rule get_gene_impacts:
+	input:
+		"4_vep/{svtype}-vep.vcf"
+	output:
+		"4_vep/predicted_consequences/{svtype}-gene_impact_summary.txt",
+		expand("4_vep/predicted_consequences/{svtype}-{impact}-{genetype}genes.{extension}", impact = VEP_IMPACT_TYPES, genetype = ["protein_coding_", "nc", "pseudo"], extension = ["txt", "csv"], allow_missing = True)
+	params:
+		impact_types= VEP_IMPACT_TYPES
+	script:
+		"scripts/get_genes_for_impact_svs.py"
+
+# Get high-impact SVs spanning genes of interest
+rule get_svs_spanning_genes_of_interest:
+	input: 
+		"4_vep/predicted_consequences/{svtype}-HIGH-protein_coding_genes.csv",
+		"0_input_data/reference/genes_of_interest.txt",
+		"2_basic_sv_stats/overlapped_genes/{svtype}_protein_coding_genes.txt",
+	output:
+		"4_vep/genes_of_interest/{svtype}.tsv"
+	script:
+		"scripts/get_svs_interesting_genes.py"
+
+# Get Entrez gene symbols for SVs spanning genes of interest
+rule get_entrez_symbols_for_genes_of_interest:
+	input: 
+		"4_vep/genes_of_interest/{svtype}.tsv",
+		"4_vep/{svtype}-vep.vcf"
+	output:
+		"4_vep/genes_of_interest/{svtype}.entrez.tsv"
+	conda:  "yaml/r_packages.yaml"
+	script:
+		"scripts/get_entrez_gene_names.R"
+	
+# Get overlap proportion for SVs spanning genes of interest
+rule get_overlap_proportion_for_genes_of_interest:
+	input: 
+		"2_basic_sv_stats/overlapped_genes/{svtype}_protein_coding_genes.bed",
+		"4_vep/genes_of_interest/{svtype}.entrez.tsv" 
+	output:
+		"4_vep/genes_of_interest/{svtype}_overlap_prop.tsv"
+	conda:  "yaml/r_packages.yaml"
+	script:
+		"scripts/get_overlap_prop.R"
+
+# Get gene family members with SVs
+rule get_gene_family_members:
+	input:
+		vcf="4_vep/predicted_consequences/{svtype}-HIGH-protein_coding_genes.txt",
+		family="0_input_data/reference/gene_families/{family}/genes_and_candidates.tsv"
+	output:
+		"4_vep/gene_families/{svtype}-{family}.txt"
+	shell:
+		"""
+			grep -Ff 4_vep/predicted_consequences/{wildcards.svtype}-HIGH-protein_coding_genes.txt 0_input_data/reference/gene_families/{wildcards.family}/genes_and_candidates.tsv | cut -d ":" -f 2 | cut -d ";" -f 1,2 | sed -e 's/Name=//g' | tr ";" "," | sed -e 's/$/,{wildcards.svtype}/' > {output}|| true
+		"""
+
+
+# Concatenate gene family membership
+rule concatenate_gene_family_members:
+	input:
+		expand("4_vep/gene_families/{svtype}-{family}.txt", svtype = ["DEL", "DUP"], allow_missing = True)
+	output:
+		"4_vep/gene_families/ALLSVS-{family}.txt"
+	shell:
+		"""
+			cat {input} > {output}
+		"""
+# Summarize gene family membership in WormCat categories
+rule summarize_gene_family_members_wormcat:
+	input:
+		"4_vep/gene_families/ALLSVS-{genefamily}.txt"
+	output:
+		"5_wormcat_ora/gene_families/{genefamily}/summary.txt",
+		"5_wormcat_ora/gene_families/{genefamily}/wbgenes.txt"
+	params:
+		wormcatfile="5_wormcat_ora/WormCat_level1_no_pseudogenes.csv"
+	shell:
+		"""
+			bash scripts/summarize_gene_families_wormcat.sh {wildcards.genefamily} {input} {params.wormcatfile}
+		"""
+
+# Plot wormcat results
+rule plot_wormcat:
+	input:
+		cat1 = "5_wormcat_ora/WormCat_level1_no_pseudogenes.csv",
+		cat2 = "5_wormcat_ora/WormCat_level2_no_pseudogenes.csv",
+		cat3 = "5_wormcat_ora/WormCat_level3_no_pseudogenes.csv"
+	output:
+		expand("5_wormcat_ora/plots/wormcat_c1-c3.{extension}", extension = ["png", "eps"])
+	conda:  "yaml/r_packages.yaml"		
+	script:
+		"scripts/plot_wormcat_results.R"

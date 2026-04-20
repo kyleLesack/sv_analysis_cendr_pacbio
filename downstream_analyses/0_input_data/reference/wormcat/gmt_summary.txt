@@ -1,0 +1,11 @@
+Summary of GMT files created
+
+Category 1 categories: 34
+Category 1 smallest category size: 10
+Category 1 largest category size: 9535
+Category 2 categories: 249
+Category 2 smallest category size: 1
+Category 2 largest category size: 7850
+Category 3 categories: 471
+Category 3 smallest category size: 1
+Category 3 largest category size: 7850
