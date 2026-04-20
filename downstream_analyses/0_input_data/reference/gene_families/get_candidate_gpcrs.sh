@@ -1,0 +1,22 @@
+#grep -iF "Name=sra-" ../Caenorhabditis_elegans.WBcel235.61.gff3 | #grep -vi "Serpentine Receptor" > candidate_gpcrs.tsv
+#grep -iF "Name=srab-" ../Caenorhabditis_elegans.WBcel235.61.gff3 | #grep -vi "Serpentine Receptor" >> candidate_gpcrs.tsv
+#grep -iF "Name=srb-" ../Caenorhabditis_elegans.WBcel235.61.gff3 | #grep -vi "Serpentine Receptor" >> candidate_gpcrs.tsv
+#grep -iF "Name=srbc-" ../Caenorhabditis_elegans.WBcel235.61.gff3 | #grep -vi "Serpentine Receptor" >> candidate_gpcrs.tsv
+#grep -iF "Name=srd-" ../Caenorhabditis_elegans.WBcel235.61.gff3 | #grep -vi "Serpentine Receptor" >> candidate_gpcrs.tsv
+#grep -iF "Name=sre-" ../Caenorhabditis_elegans.WBcel235.61.gff3 | #grep -vi "Serpentine Receptor" >> candidate_gpcrs.tsv
+#grep -iF "Name=srg-" ../Caenorhabditis_elegans.WBcel235.61.gff3 | #grep -vi "Serpentine Receptor" >> candidate_gpcrs.tsv
+#grep -iF "Name=srh-" ../Caenorhabditis_elegans.WBcel235.61.gff3 | #grep -vi "Serpentine Receptor" >> candidate_gpcrs.tsv
+#grep -iF "Name=sri-" ../Caenorhabditis_elegans.WBcel235.61.gff3 | #grep -vi "Serpentine Receptor" >> candidate_gpcrs.tsv
+#grep -iF "Name=srj-" ../Caenorhabditis_elegans.WBcel235.61.gff3 | #grep -vi "Serpentine Receptor" >> candidate_gpcrs.tsv
+#grep -iF "Name=srm-" ../Caenorhabditis_elegans.WBcel235.61.gff3 | #grep -vi "Serpentine Receptor" >> candidate_gpcrs.tsv
+#grep -iF "Name=srn-" ../Caenorhabditis_elegans.WBcel235.61.gff3 | #grep -vi "Serpentine Receptor" >> candidate_gpcrs.tsv
+#grep -iF "Name=srr-" ../Caenorhabditis_elegans.WBcel235.61.gff3 | #grep -vi "Serpentine Receptor" >> candidate_gpcrs.tsv
+#grep -iF "Name=srsx-" ../Caenorhabditis_elegans.WBcel235.61.gff3 | #grep -vi "Serpentine Receptor" >> candidate_gpcrs.tsv
+#grep -iF "Name=srt-" ../Caenorhabditis_elegans.WBcel235.61.gff3 | #grep -vi "Serpentine Receptor" >> candidate_gpcrs.tsv
+#grep -iF "Name=sru-" ../Caenorhabditis_elegans.WBcel235.61.gff3 | #grep -vi "Serpentine Receptor" >> candidate_gpcrs.tsv
+#grep -iF "Name=srv-" ../Caenorhabditis_elegans.WBcel235.61.gff3 | #grep -vi "Serpentine Receptor" >> candidate_gpcrs.tsv
+#grep -iF "Name=srw-" ../Caenorhabditis_elegans.WBcel235.61.gff3 | #grep -vi "Serpentine Receptor" >> candidate_gpcrs.tsv
+#grep -iF "Name=srx-" ../Caenorhabditis_elegans.WBcel235.61.gff3 | #grep -vi "Serpentine Receptor" >> candidate_gpcrs.tsv
+#grep -iF "Name=srxa-" ../Caenorhabditis_elegans.WBcel235.61.gff3 | #grep -vi "Serpentine Receptor" >> candidate_gpcrs.tsv
+#grep -iF "Name=srz-" ../Caenorhabditis_elegans.WBcel235.61.gff3 | #grep -vi "Serpentine Receptor" >> candidate_gpcrs.tsv
+
