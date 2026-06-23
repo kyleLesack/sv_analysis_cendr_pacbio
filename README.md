@@ -67,3 +67,7 @@ The Snakemake pipeline expects the FASTQ files to be in the following locations:
 
 0_input/reference/c_elegans.PRJNA13758.WS263.genomic.fa
 
+# Downstream Analyses
+
+An additional Snakemake pipeline is available for the [downstream analyses](./downstream_analyses).
+
