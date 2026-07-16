@@ -69,5 +69,5 @@ The Snakemake pipeline expects the FASTQ files to be in the following locations:
 
 # Downstream Analyses
 
-An additional Snakemake pipeline is available for the [downstream analyses](./downstream_analyses).
+An additional Snakemake pipeline is available for the [downstream analyses](./downstream_analyses/) that perform additional quality assurance
 
