@@ -254,7 +254,7 @@ rule validate_is_specific:
         mem_mb=lambda _, attempt: 1000 + ((attempt - 1) * 10000),
         time_hms="00:05:00"
     script:
-        "scripts/1_process_results/check_jasmin_specific_calls.py"
+        "scripts/check_jasmin_specific_calls.py"
 
 # Finalize merged dataset. Remove low confidence calls.
 rule jasmine_finalize:
@@ -299,7 +299,7 @@ rule extract_svs_by_type:
         mem_mb=lambda _, attempt: 1000 + ((attempt - 1) * 10000),
         time_hms="00:05:00"
     script:
-        "scripts/1_process_results/extract_svs_by_type.py"
+        "scripts/extract_svs_by_type.py"
 
 
 
