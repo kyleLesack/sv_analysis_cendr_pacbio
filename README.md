@@ -71,3 +71,6 @@ The Snakemake pipeline expects the FASTQ files to be in the following locations:
 
 An additional Snakemake pipeline is available for the [downstream analyses](./downstream_analyses/) that perform additional quality assurance
 
+# VCF Files
+
+The VEP annoated vcf files from this analysis are available for download in the [vcf_files](./vcf_files/) directory.
