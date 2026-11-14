@@ -17,7 +17,7 @@ The analysis of *Caenorhabditis elegans* structural variants (SVs) was performed
 
 SV annotation was performed using the following tools:
 
-* Variant Effect Predictor (v.109.3)
+* Variant Effect Predictor (v.114.1)
 	* To narrow down the SVs to those that were most likely to have significant phenotypic consequences, the VEP filter parameter was set to "IMPACT is HIGH".
 * easyGSEA tool from eVITTA (v1.3.1) 
 	* Overrepresented genes were annotated using the annotated gene sets from WormCat (V2)
